@@ -47,6 +47,10 @@ db.videosModel = require('../src/Models/videosModel')(
     sequelize,
     Sequelize
 );
+db.notesModel = require('../src/Models/notesModel')(
+    sequelize,
+    Sequelize
+);
 db.historyModel = require('../src/Models/historyModel')(
     sequelize,
     Sequelize

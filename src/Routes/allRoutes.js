@@ -21,6 +21,6 @@ module.exports = (app) => {
     router.post("/updatePersonalDetails", loginController.updatePersonalDetails)
     router.post("/methodandcourse", myCourseController.saveCourseandMethod)
     router.post("/Videos", myCourseController.videos)
-
+    router.post("/video", myCourseController.video)
     app.use("/api/v1", router);
 };
