@@ -12,8 +12,12 @@ exports.payment = async (req, res) => {
     try {
         const { userId, courseIds, referralCode, isDemo } = req.body;
         if (isDemo) {
+            console.log(courseIds);
             const [updatedRowsCount] = await usersModel.update(
-                { demoTimestamp: new Date() },
+                {
+                    demoTimestamp: new Date(),
+                    course_codes: courseIds
+                },
                 { where: { id: userId } }
             );
 
@@ -29,6 +33,12 @@ exports.payment = async (req, res) => {
                 });
             }
         } else {
+            const updateCourseCodes = await usersModel.update(
+                {
+                    course_codes: courseIds
+                },
+                { where: { id: userId } }
+            );
             const currency = 'INR';
             // Calculate the total amount based on the number of courses
             const amount = courseIds.reduce((totalAmount, courseId) => totalAmount + 100, 0);

@@ -27,6 +27,30 @@ db.courseMappingModel = require('../src/Models/courseMappingModel')(
     sequelize,
     Sequelize
 );
+db.methodMappingModel = require('../src/Models/methodMappingModel')(
+    sequelize,
+    Sequelize
+);
+db.subjectsModel = require('../src/Models/subjectsModel')(
+    sequelize,
+    Sequelize
+);
+db.chaptersModel = require('../src/Models/chaptersModel')(
+    sequelize,
+    Sequelize
+);
+db.topicsModel = require('../src/Models/topicsModel')(
+    sequelize,
+    Sequelize
+);
+db.videosModel = require('../src/Models/videosModel')(
+    sequelize,
+    Sequelize
+);
+db.historyModel = require('../src/Models/historyModel')(
+    sequelize,
+    Sequelize
+);
 db.paymentsModel = require('../src/Models/paymentsModel')(
     sequelize,
     Sequelize

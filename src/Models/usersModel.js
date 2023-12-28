@@ -39,12 +39,20 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM('student', 'professional', 'parent', 'learner', 'teacher'),
             allowNull: true,
         },
-        course_code: {
-            type: Sequelize.STRING(20),
+        course_codes: {
+            type: Sequelize.JSON,
+            allowNull: true,
+        },
+        active_courseid: {
+            type: Sequelize.INTEGER,
             allowNull: true,
         },
         course_name: {
             type: Sequelize.STRING(255),
+            allowNull: true,
+        },
+        course_start_date: {
+            type: Sequelize.DATE,
             allowNull: true,
         },
         is_paid: {
@@ -123,8 +131,8 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT,
             allowNull: true,
         },
-        study_method: {
-            type: Sequelize.STRING(255),
+        study_methodid: {
+            type: Sequelize.INTEGER,
             allowNull: true,
         },
         referral_code: {

@@ -6,7 +6,6 @@ const jwt = require("../../Services/jwt");
 const randomstring = require("randomstring");
 const { sequelize, Op } = require("sequelize")
 const request = require('request');
-
 const MSG_AUTH_KEY = process.env.MSG_AUTH_KEY;
 
 exports.sendOtp = async (req, res) => {
@@ -213,7 +212,6 @@ exports.testapi = async (req, res) => {
         res.send("Syssssstem hang")
         console.log(err);
     }
-
 }
 
 exports.resetPassword = async (req, res) => {
