@@ -2,6 +2,7 @@ const db = require('../../Config/connection');
 const { Op } = require('sequelize');
 const usersModel = db.usersModel;
 const paymentsModel = db.paymentsModel;
+const historyModel = db.historyModel;
 exports.getUserProfile = async (req, res) => {
     try {
         const { id } = req.query;
@@ -55,3 +56,30 @@ exports.getUserProfile = async (req, res) => {
         res.status(500).json({ error: 'Error fetching user profile' });
     }
 };
+
+exports.getHistory = async (req, res) => {
+    try {
+        const { id } = req.query;
+        const history = await historyModel.findAll({
+            where: { user_id: id },
+            attributes: ['id', 'user_id', 'content_type', 'content_id', 'content_name', 'progress', 'created_at'],
+            order: [['created_at', 'DESC']], // Order by created_at in descending order
+            limit: 5, // Limit the result to 5 entries
+        });
+        if (!history || history.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: 'History not found',
+            });
+        }
+        res.status(200).json({
+            status: true,
+            message: 'Latest 5 history entries fetched successfully',
+            history,
+        });
+    } catch (error) {
+        console.log('Error fetching history:', error);
+        res.status(500).json({ error: 'Error fetching history' });
+    }
+}
+

@@ -22,5 +22,7 @@ module.exports = (app) => {
     router.post("/methodandcourse", myCourseController.saveCourseandMethod)
     router.post("/Videos", myCourseController.videos)
     router.post("/video", myCourseController.video)
+    router.post("/getNotes", myCourseController.getNotes)
+    router.get("/getHistory", userProfileController.getHistory)
     app.use("/api/v1", router);
 };

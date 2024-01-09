@@ -1,5 +1,6 @@
 const db = require('../../Config/connection');
 const { Op } = require('sequelize');
+const chaptersModel = db.chaptersModel;
 const sequelize = db.sequelize;
 const usersModel = db.usersModel;
 const videosModel = db.videosModel;
@@ -148,3 +149,41 @@ exports.video = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+exports.getNotes = async (req, res) => {
+    try {
+        const { subjectId } = req.body;
+
+        // Fetching notes
+        const notes = await notesModel.findAll({
+            attributes: ['notes_id', 'notes_url', 'chapter_id', 'subject_id'],
+            where: { subject_id: subjectId },
+        });
+
+        if (!notes || notes.length === 0) {
+            return res.status(404).json({ error: 'Notes not found' });
+        }
+
+        // Fetching chapter name
+        const chapters = await chaptersModel.findAll({
+            attributes: ['chapter_id', 'chapter_name'],
+            where: { subject_id: subjectId },
+        });
+
+        // Mapping notes and chapter data
+        const notesDetails = notes.map(note => {
+            const chapter = chapters.find(chap => chap.chapter_id === note.chapter_id);
+            return {
+                notesId: note.notes_id,
+                notesUrl: note.notes_url,
+                chapterName: chapter ? chapter.chapter_name : 'Unknown Chapter',
+                // Add subjectName property if you fetch subject name
+            };
+        });
+        console.log(notesDetails);
+        res.status(200).json(notesDetails);
+    } catch (error) {
+        console.error('Error fetching notes:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
