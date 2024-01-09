@@ -32,6 +32,10 @@ module.exports = (sequelize, Sequelize) => {
             defaultValue: Sequelize.NOW,
             onUpdate: Sequelize.NOW,
         },
+        section: {
+            type: Sequelize.TINYINT,
+            defaultValue: 0,
+        }
     }, {
         tableName: 'Subjects', // Replace 'YourTableName' with the actual table name
         timestamps: false,

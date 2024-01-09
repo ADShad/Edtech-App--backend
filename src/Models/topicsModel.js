@@ -49,7 +49,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
     }, {
-        tableName: 'YourTableName', // Replace 'YourTableName' with the actual table name
+        tableName: 'Topics',
         timestamps: false,
     });
 

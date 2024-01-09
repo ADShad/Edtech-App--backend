@@ -1,5 +1,6 @@
 const db = require('../../Config/connection');
 const { Op } = require('sequelize');
+const topicsModel = require('../Models/topicsModel');
 const chaptersModel = db.chaptersModel;
 const sequelize = db.sequelize;
 const usersModel = db.usersModel;
@@ -187,3 +188,48 @@ exports.getNotes = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
+exports.milestone = async (req, res) => {
+    try {
+        const { topicId } = req.query;
+
+        const videosQuery = `
+            SELECT v.video_id, v.video_url, t.topic_name, t.description
+            FROM Videos AS v
+            INNER JOIN Topics AS t ON v.topic_id = t.topic_id
+            WHERE v.topic_id = ${topicId};
+        `;
+
+        const videos = await sequelize.query(videosQuery, {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: { topicId: topicId },
+        });
+
+        const notesQuery = `
+            SELECT n.notes_id, n.notes_url, t.topic_name, t.description
+            FROM Notes AS n
+            INNER JOIN Topics AS t ON n.topic_id = t.topic_id
+            WHERE n.topic_id = ${topicId};
+        `;
+
+        const notes = await sequelize.query(notesQuery, {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: { topicId: topicId },
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Milestone Content Retrieved",
+            data: {
+                videos: videos,
+                notes: notes
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
