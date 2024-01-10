@@ -68,14 +68,14 @@ exports.videos = async (req, res) => {
             if (!videos || videos.length === 0) {
                 return res.status(404).json({ error: 'No videos found for the course' });
             }
-
+            const dummyVideoNames = ["Introduction", "P N C", "Algebra", "Geometry", "Statistics", "Probability", "numerical Methods"]
             // Calculate dateToBeWatched for each video
             const videosWithDate = await Promise.all(
                 videos.map(async (video, index) => {
                     const hoursToAdd = index * 24;
                     const dateToBeWatched = new Date(courseStartDate);
                     dateToBeWatched.setHours(dateToBeWatched.getHours() + hoursToAdd);
-
+                    const videoName = dummyVideoNames[index % dummyVideoNames.length];
                     // Get DurationPercentage from history model
                     const durationRecord = await historyModel.findOne({
                         attributes: ['progress'],
@@ -89,6 +89,7 @@ exports.videos = async (req, res) => {
                         url: video.video_url,
                         durationPercentage,
                         dateToBeWatched,
+                        videoName
                     };
                 })
             );
