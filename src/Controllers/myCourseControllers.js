@@ -234,3 +234,50 @@ exports.milestone = async (req, res) => {
         });
     }
 };
+
+exports.saveProgress = async (req, res) => {
+    try {
+        const { userId, contentId, contentType, progress } = req.body;
+
+        const historyRecord = await historyModel.findOne({
+            where: { user_id: userId, content_id: contentId, content_type: contentType },
+        });
+        let contentName = '';
+        if (contentType === 'video') {
+            const TopicId = await videosModel.findOne({
+                where: { video_id: contentId },
+                attributes: ['topic_id'],
+            },
+            );
+            contentName = await TopicsModel.findOne({
+                where: { topic_id: TopicId.topic_id },
+                attributes: ['topic_name'],
+            });
+        }
+        if (historyRecord) {
+            await historyModel.update(
+                { progress: progress },
+                { where: { user_id: userId, content_id: contentId, content_type: contentType } }
+            );
+        } else {
+            await historyModel.create({
+                user_id: userId,
+                content_id: contentId,
+                content_type: contentType,
+                content_name: contentName.topic_name,
+                progress: progress,
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Progress Saved"
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+}

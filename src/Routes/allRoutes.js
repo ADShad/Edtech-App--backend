@@ -29,5 +29,6 @@ module.exports = (app) => {
     router.get("/getChapters", MappingController.getChaptersMapping)
     router.get("/getTopics", MappingController.getTopicMapping)
     router.get("/milestone", myCourseController.milestone)
+    router.post("/saveProgress", myCourseController.saveProgress)
     app.use("/api/v1", router);
 };
