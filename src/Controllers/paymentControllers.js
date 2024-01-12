@@ -135,12 +135,14 @@ exports.paymentVerification = async (req, res) => {
 
             const phoneNumberWithoutPlus = req.body.payload.payment.entity.contact.replace('+', '');
             console.log(phoneNumberWithoutPlus);
+
             const userId = await paymentsModel.findOne({
                 where: {
                     order_id: req.body.payload.payment.entity.id
                 },
                 attributes: ['user_id']
             })
+            console.log(userId);
             if (req.body.payload.payment.entity.status === 'captured') {
                 const updateIspaid = usersModel.update({
                     is_paid: 1
