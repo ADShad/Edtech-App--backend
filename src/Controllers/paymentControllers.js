@@ -150,7 +150,7 @@ exports.paymentVerification = async (req, res) => {
                 },
                     {
                         where: {
-                            id: userId.id
+                            id: userId.user_id
                         }
                     })
                 console.log(updateIspaid)
