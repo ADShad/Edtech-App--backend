@@ -139,7 +139,7 @@ exports.paymentVerification = async (req, res) => {
 
             const userId = await paymentsModel.findOne({
                 where: {
-                    order_id: req.body.payload.payment.entity.id
+                    order_id: req.body.payload.payment.entity.order_id
                 },
                 attributes: ['user_id']
             })
