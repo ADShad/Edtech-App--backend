@@ -132,11 +132,12 @@ exports.paymentVerification = async (req, res) => {
         // console.log(digest, req.headers['x-razorpay-signature'])
         if (digest === req.headers['x-razorpay-signature']) {
             console.log('request is legit')
+
             const phoneNumberWithoutPlus = req.body.payload.payment.entity.contact.replace('+', '');
             console.log(phoneNumberWithoutPlus);
-            const userId = await usersModel.findOne({
+            const userId = await paymentsModel.findOne({
                 where: {
-                    phone_number: phoneNumberWithoutPlus
+                    order_id: req.body.payload.payment.entity.id
                 },
                 attributes: ['id']
             })
