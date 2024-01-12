@@ -144,14 +144,15 @@ exports.paymentVerification = async (req, res) => {
                 attributes: ['user_id']
             })
             console.log("user", userId);
-            console.log(userId.Payment);
+            console.log(userId.dataValues);
+            console.log(userId.user_id);
             if (req.body.payload.payment.entity.status === 'captured') {
                 const updateIspaid = usersModel.update({
                     is_paid: 1
                 },
                     {
                         where: {
-                            id: userId.Payment.dataValues.user_id
+                            id: userId.dataValues.user_id
                         }
                     })
                 console.log(updateIspaid)
