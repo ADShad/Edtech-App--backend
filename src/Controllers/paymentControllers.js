@@ -120,11 +120,11 @@ exports.payment = async (req, res) => {
 exports.paymentVerification = async (req, res) => {
     try {
         const secret = 'stslBee/nIC3VI1w'
-        // console.log("aafter this");
-        // console.log(req.body.payload.payment.entity.status);
-        // console.log(req.body.payload.payment.entity.method);
-        // console.log(req.body.payload.payment.entity.id);
-        // console.log(req.body.payload.payment.entity.contact);
+        console.log("aafter this");
+        console.log(req.body.payload.payment.entity.status);
+        console.log(req.body.payload.payment.entity.method);
+        console.log(req.body.payload.payment.entity.id);
+        console.log(req.body.payload.payment.entity.contact);
         const crypto = require('crypto');
         const shasum = crypto.createHmac('sha256', secret)
         shasum.update(JSON.stringify(req.body))
@@ -133,6 +133,7 @@ exports.paymentVerification = async (req, res) => {
         if (digest === req.headers['x-razorpay-signature']) {
             console.log('request is legit')
             const phoneNumberWithoutPlus = req.body.payload.payment.entity.contact.replace('+', '');
+            console.log(phoneNumberWithoutPlus);
             const userId = await usersModel.findOne({
                 where: {
                     phone_number: phoneNumberWithoutPlus
