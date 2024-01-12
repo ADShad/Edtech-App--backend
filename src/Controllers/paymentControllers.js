@@ -152,7 +152,7 @@ exports.paymentVerification = async (req, res) => {
                 },
                     {
                         where: {
-                            id: userId.dataValues.user_id
+                            id: parseInt(userId.user_id)
                         }
                     })
                 console.log(updateIspaid)
