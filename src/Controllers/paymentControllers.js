@@ -16,7 +16,8 @@ exports.payment = async (req, res) => {
             const [updatedRowsCount] = await usersModel.update(
                 {
                     demoTimestamp: new Date(),
-                    course_codes: courseIds
+                    course_codes: courseIds,
+                    active_courseid: 3,
                 },
                 { where: { id: userId } }
             );
@@ -35,7 +36,9 @@ exports.payment = async (req, res) => {
         } else {
             const updateCourseCodes = await usersModel.update(
                 {
-                    course_codes: courseIds
+                    course_codes: courseIds,
+                    active_courseid: 3,
+
                 },
                 { where: { id: userId } }
             );
