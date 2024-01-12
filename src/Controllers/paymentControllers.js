@@ -121,6 +121,7 @@ exports.paymentVerification = async (req, res) => {
     try {
         const secret = 'stslBee/nIC3VI1w'
         console.log("aafter this");
+        console.log(req.body.payload.payment.entity);
         console.log(req.body.payload.payment.entity.status);
         console.log(req.body.payload.payment.entity.method);
         console.log(req.body.payload.payment.entity.id);
