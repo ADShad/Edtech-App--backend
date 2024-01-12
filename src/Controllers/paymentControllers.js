@@ -164,7 +164,7 @@ exports.paymentVerification = async (req, res) => {
             },
                 {
                     where: {
-                        user_id: userId.id
+                        user_id: userId.user_id
                     }
                 })
             console.log(update)
