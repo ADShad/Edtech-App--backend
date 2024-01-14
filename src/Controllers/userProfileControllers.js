@@ -37,7 +37,7 @@ exports.getUserProfile = async (req, res) => {
 
         const userProfile = await usersModel.findOne({
             where: { id: id, is_deleted: 0 },
-            attributes: ['id', 'username', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid'],
+            attributes: ['id', 'username', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid', 'created_at'],
         });
         if (!userProfile) {
             return res.status(404).json({
