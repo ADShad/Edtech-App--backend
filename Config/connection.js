@@ -59,4 +59,16 @@ db.paymentsModel = require('../src/Models/paymentsModel')(
     sequelize,
     Sequelize
 );
+db.testsModel = require('../src/Models/testsModel')(
+    sequelize,
+    Sequelize
+);
+db.testsHistoryModel = require('../src/Models/testHistoryModel')(
+    sequelize,
+    Sequelize
+);
+db.questionsModel = require('../src/Models/questionsModel')(
+    sequelize,
+    Sequelize
+);
 module.exports = db;
