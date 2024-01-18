@@ -2,6 +2,7 @@ const db = require('../../Config/connection');
 const { Op, Sequelize } = require('sequelize');
 const testsModel = db.testsModel;
 const questionsModel = db.questionsModel;
+const testHistoryModel = db.testsHistoryModel;
 exports.testapi = async (req, res) => {
     try {
         res.status(200).json({ success: true, message: 'test api' });
@@ -96,21 +97,120 @@ exports.getTestQuestions = async (req, res) => {
     }
 }
 
-
-exports.patternMapping = async (req, res) => {
+exports.saveTestProgress = async (req, res) => {
     try {
-        const patterns = {
-            'UPSC Exam Pattern': 0,
-            'Equal Percent test': 1,
-            'Random Percent': 2,
-            'Choose Own Percent': 3,
-        };
+        const { user_id, test_id, question_id, option_selected, time_taken } = req.body;
 
-        // You can now use the 'patterns' object as needed in your code
+        const question = await questionsModel.findOne({
+            where: { question_id: question_id },
+            attributes: ['question_id', 'correct_option_index', 'negative_marking']
+        });
 
-        res.status(200).json({ success: true, patterns });
+        let marks = 0;
+        let negative_marks = 0;
+        let correct_answer = null;
+
+        if (option_selected === question.correct_option_index) {
+            marks = 4;
+            correct_answer = question.correct_option_index;
+        } else {
+            negative_marks = question.negative_marking;
+        }
+
+        const testHistory = await testHistoryModel.findOne({
+            where: { user_id: user_id, test_id: test_id },
+            attributes: ['test_history_id']
+        });
+
+        if (testHistory) {
+            await testHistoryModel.update({
+                user_answers: Sequelize.fn('JSON_ARRAY_APPEND', Sequelize.col('user_answers'), '$', option_selected),
+                attempted_questions: Sequelize.fn('JSON_ARRAY_APPEND', Sequelize.col('attempted_questions'), '$', question_id),
+                time_taken: Sequelize.fn('JSON_ARRAY_APPEND', Sequelize.col('time_taken'), '$', time_taken),
+                positive_marks: Sequelize.literal(`positive_marks + ${marks}`),
+                negative_marks: Sequelize.literal(`negative_marks + ${negative_marks}`),
+                correct_answers: correct_answer !== null ? Sequelize.fn('JSON_ARRAY_APPEND', Sequelize.col('correct_answers'), '$', correct_answer) : Sequelize.col('correct_answers'),
+            }, {
+                where: { user_id: user_id, test_id: test_id }
+            });
+
+            res.status(200).json({ success: true, message: 'Test history updated successfully', marks: marks });
+        } else {
+            await testHistoryModel.create({
+                user_id: user_id,
+                test_id: test_id,
+                user_answers: [option_selected],
+                attempted_questions: [question_id],
+                time_taken: [time_taken],
+                positive_marks: marks,
+                negative_marks: negative_marks,
+                correct_answers: correct_answer !== null ? [correct_answer] : [],
+            });
+
+            res.status(201).json({ success: true, message: 'Test history created successfully', marks: marks });
+        }
+
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: 'Error fetching test questions' });
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
 };
+
+exports.submitTest = async (req, res) => {
+    try {
+        const { user_id, test_id } = req.body;
+
+        const testHistory = await testHistoryModel.findOne({
+            where: { user_id: user_id, test_id: test_id },
+            attributes: ['positive_marks', 'negative_marks', 'correct_answers', 'user_answers', 'attempted_questions', 'time_taken'],
+        });
+
+        const test = await testsModel.findOne({
+            where: { test_id: test_id },
+            attributes: ['total_question', 'question_level'],
+        });
+
+        const total_attempted = testHistory.attempted_questions.length;
+        const total_correct = testHistory.correct_answers.length;
+        const total_incorrect = total_attempted - total_correct;
+        const total_marks = testHistory.positive_marks - testHistory.negative_marks;
+        const timeTakenArray = testHistory.time_taken || [];
+        const average_time_taken = timeTakenArray.length > 0 ? timeTakenArray.reduce((sum, value) => sum + value, 0) / timeTakenArray.length : 0;
+        const accuracy = (total_correct / total_attempted) * 100;
+        let Recommendations;
+        if (accuracy > 70) {
+            Recommendations = {
+                FirstPoint: "You are doing great, keep it up!",
+                SecondPoint: "Focus on other weak areas",
+            }
+        } else {
+            Recommendations = {
+                FirstPoint: "Watch the video again",
+                SecondPoint: "Pay Attention to crucial Topics!",
+            }
+        }
+        const testResult = {
+            average_time_taken,
+            total_question: test.total_question,
+            question_level: test.question_level,
+            total_attempted,
+            total_correct,
+            total_incorrect,
+            negative_marks: -1,
+            total_marks,
+            accuracy,
+            Recommendations,
+            test_level: test.question_level,
+        };
+
+        res.status(200).json({
+            success: true,
+            message: 'Test submitted successfully',
+            testResult,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+    }
+}

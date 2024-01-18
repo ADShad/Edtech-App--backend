@@ -4,6 +4,8 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
             primaryKey: true,
+            autoIncrement: true,
+
         },
         user_id: {
             type: Sequelize.INTEGER,
@@ -64,6 +66,10 @@ module.exports = (sequelize, Sequelize) => {
             defaultValue: Sequelize.NOW,
             onUpdate: Sequelize.NOW,
         },
+        time_taken: {
+            type: Sequelize.JSON,
+            allowNull: true
+        }
     }, {
         tableName: 'TestHistory',
         timestamps: false,

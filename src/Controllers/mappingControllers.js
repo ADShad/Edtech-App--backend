@@ -111,3 +111,21 @@ exports.getTopicMapping = async (req, res) => {
         res.status(500).json({ error: 'Error fetching topics mapping' });
     }
 }
+
+exports.patternMapping = async (req, res) => {
+    try {
+        const patterns = {
+            'UPSC Exam Pattern': 0,
+            'Equal Percent test': 1,
+            'Random Percent': 2,
+            'Choose Own Percent': 3,
+        };
+
+        // You can now use the 'patterns' object as needed in your code
+
+        res.status(200).json({ success: true, patterns });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching test questions' });
+    }
+};
