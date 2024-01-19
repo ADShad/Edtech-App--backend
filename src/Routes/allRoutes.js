@@ -7,7 +7,6 @@ module.exports = (app) => {
     const myCourseController = require("../Controllers/myCourseControllers.js")
     const jwtAuth = require("../../Services/jwt");
     var router = require("express").Router();
-
     router.get("/", jwtAuth.jwtAuthentication, testController.testapi)
     router.post("/sendotp", loginController.sendOtp);
     router.post("/register", loginController.register)
@@ -35,5 +34,8 @@ module.exports = (app) => {
     router.post("/saveTestProgress", testController.saveTestProgress)
     router.post("/createTest", testController.createTest)
     router.post("/submitTest", testController.submitTest)
+    router.get("/saveTest", testController.saveTest)
+    router.get("/reviewTest", testController.reviewTest)
+    router.get("/getTestHistoryList", testController.getTestHistoryList)
     app.use("/api/v1", router);
 };

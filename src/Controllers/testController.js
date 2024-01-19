@@ -214,3 +214,94 @@ exports.submitTest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
 }
+
+exports.saveTest = async (req, res) => {
+    try {
+        const { test_history_id } = req.query;
+        const saveTest = await testHistoryModel.update({
+            is_deleted: 0
+        }, {
+            where: { test_history_id: test_history_id }
+        });
+
+        if (saveTest[0] === 0) {
+            return res.status(404).json({
+                status: false,
+                message: 'Test not found',
+            });
+        }
+        res.status(200).json({ success: true, message: 'test saved successfully', data: saveTest });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error saving test' });
+    }
+}
+
+
+exports.reviewTest = async (req, res) => {
+    try {
+        const { user_id, test_history_id } = req.query;
+        const reviewTest = await testHistoryModel.findOne({
+            where: { test_history_id: test_history_id, user_id: user_id },
+            attributes: ['user_answers', 'attempted_questions', 'time_taken'],
+        });
+        const questionsOptions = await questionsModel.findAll({
+            where: { question_id: { [Op.in]: reviewTest.attempted_questions } },
+            attributes: ['question_id', 'question_text', 'options', 'correct_option_index', 'negative_marking', 'question_level', 'chapter_id', 'section', 'description'],
+        });
+
+        // Attach userAnswers to each question
+        const questionsWithUserAnswers = questionsOptions.map((question) => {
+            const userAnswerIndex = reviewTest.attempted_questions.indexOf(question.question_id);
+            const userAnswer = reviewTest.user_answers[userAnswerIndex];
+            return {
+                ...question.dataValues,
+                userAnswer: userAnswer,
+            };
+        });
+
+        // You can customize the response based on your requirements
+        const combinedResult = {
+            success: true,
+            reviewData: {
+                positiveMarks: reviewTest.positive_marks,
+                negativeMarks: reviewTest.negative_marks,
+                correctAnswers: reviewTest.correct_answers,
+                userAnswers: reviewTest.user_answers,
+                attemptedQuestions: reviewTest.attempted_questions,
+                timeTaken: reviewTest.time_taken,
+            },
+            questions: questionsWithUserAnswers,
+        };
+
+        res.status(200).json(combinedResult);
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error getting test data' });
+    }
+}
+exports.getTestHistoryList = async (req, res) => {
+    try {
+        const { user_id } = req.query;
+        const testHistoryList = await testHistoryModel.findAll({
+            where: { user_id: user_id, is_deleted: 0 },
+            attributes: ['test_history_id', 'test_id', 'positive_marks', 'negative_marks', 'created_at'],
+        });
+
+        // Calculate total marks for all tests
+        // const totalMarks = testHistoryList.reduce((sum, test) => sum + (test.positive_marks - test.negative_marks), 0);
+
+        // Add total_marks property to each test object in the testHistoryList array
+        const testHistoryListWithTotalMarks = testHistoryList.map(test => ({
+            ...test.toJSON(),
+            total_marks: test.positive_marks - test.negative_marks,
+        }));
+
+        res.status(200).json({ success: true, message: 'Test history list fetched successfully', data: { testHistoryList: testHistoryListWithTotalMarks } });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error getting test history list' });
+    }
+}

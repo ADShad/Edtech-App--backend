@@ -69,6 +69,10 @@ module.exports = (sequelize, Sequelize) => {
         time_taken: {
             type: Sequelize.JSON,
             allowNull: true
+        },
+        is_deleted: {
+            type: Sequelize.TINYINT,
+            defaultValue: 1,
         }
     }, {
         tableName: 'TestHistory',
