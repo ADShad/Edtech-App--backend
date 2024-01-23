@@ -1,3 +1,4 @@
+const Test = require('./testsModel');
 module.exports = (sequelize, Sequelize) => {
     const TestHistory = sequelize.define('TestHistory', {
         test_history_id: {
@@ -19,7 +20,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: true,
             references: {
-                model: 'Tests',
+                model: Test,
                 key: 'test_id',
             },
         },

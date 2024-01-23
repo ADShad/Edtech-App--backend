@@ -37,5 +37,8 @@ module.exports = (app) => {
     router.get("/saveTest", testController.saveTest)
     router.get("/reviewTest", testController.reviewTest)
     router.get("/getTestHistoryList", testController.getTestHistoryList)
+    router.post("/getClassTestList", testController.getClassTestList)
+    router.get("/getClassTestHistoryList", testController.getClassTestHistoryList)
+    router.get("/testHistoryDelete", testController.testHistoryDelete)
     app.use("/api/v1", router);
 };

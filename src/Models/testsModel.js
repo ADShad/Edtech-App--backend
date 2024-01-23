@@ -47,6 +47,10 @@ module.exports = (sequelize, Sequelize) => {
         },
         question_level: {
             type: Sequelize.ENUM('Easy', 'Average', 'Hots', 'Master'),
+        },
+        question_ids: {
+            type: Sequelize.JSON,
+            allowNull: true,
         }
     }, {
         tableName: 'Tests',
