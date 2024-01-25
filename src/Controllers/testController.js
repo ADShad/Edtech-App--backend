@@ -271,6 +271,7 @@ exports.submitTest = async (req, res) => {
             success: true,
             message: 'Test submitted successfully',
             testResult,
+            historyId: testHistory.test_history_id
         });
 
     } catch (error) {
