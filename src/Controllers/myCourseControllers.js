@@ -3,9 +3,11 @@ const { Op } = require('sequelize');
 const topicsModel = require('../Models/topicsModel');
 const chaptersModel = db.chaptersModel;
 const sequelize = db.sequelize;
+const Sequelize = db.Sequelize;
 const usersModel = db.usersModel;
 const videosModel = db.videosModel;
 const courseMappingModel = db.courseMappingModel;
+const TestModel = db.testsModel;
 const TopicsModel = db.topicsModel;
 const notesModel = db.notesModel;
 const subjectsModel = db.subjectsModel;
@@ -128,9 +130,15 @@ exports.video = async (req, res) => {
             WHERE v.video_id = ${videoId};
         `;
         const [result, meta] = await sequelize.query(query)
-
+        console.log(result[0].topic_id);
         if (result && result.length > 0) {
-            result[0].testId = 1;
+            const query1 = `SELECT test_id FROM Tests
+            WHERE JSON_CONTAINS(chapter_ids, '[${result[0].topic_id}]') AND test_type = 'RapidFire';
+            `
+            const [result1, meta2] = await sequelize.query(query1);
+
+            console.log(result1[0].test_id);
+            result[0].testId = result1[0].test_id;
 
             res.status(200).json({
                 videoId: result[0].video_id,

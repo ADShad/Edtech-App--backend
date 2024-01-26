@@ -40,5 +40,6 @@ module.exports = (app) => {
     router.post("/getClassTestList", testController.getClassTestList)
     router.get("/getClassTestHistoryList", testController.getClassTestHistoryList)
     router.get("/testHistoryDelete", testController.testHistoryDelete)
+    router.post("/submitRapidtest", testController.submitRapidtest)
     app.use("/api/v1", router);
 };

@@ -68,6 +68,24 @@ exports.getTestQuestions = async (req, res) => {
                 QuestionIds: questionIds
             });
         }
+        if (test.test_type === 'RapidFire') {
+            const allRapidFireQuestions = await questionsModel.findAll({
+                where: { test_id: test_id },
+                attributes: ['question_id', 'question_text', 'options', 'correct_option_index', 'negative_marking', 'question_level', 'chapter_id', 'section'],
+                limit: test.total_question
+            })
+            const questionIds = allRapidFireQuestions.map(question => question.question_id);
+            console.log(questionIds);
+            await testsModel.update({ question_ids: questionIds }, { where: { test_id: test_id } });
+            return res.status(200).json({
+                success: true,
+                message: 'Successfully fetched RapidFire test questions',
+                durationPerQuestion: test.duration_per_question,
+                questions: allRapidFireQuestions,
+                totalQuestions: questionIds.length,
+                QuestionIds: questionIds
+            });
+        }
         const allQuestions = await questionsModel.findAll({
             where: { chapter_id: { [Op.in]: test.chapter_ids }, question_level: test.question_level },
             attributes: ['question_id', 'question_text', 'options', 'correct_option_index', 'negative_marking', 'question_level', 'chapter_id', 'section'],
@@ -221,7 +239,7 @@ exports.submitTest = async (req, res) => {
 
         const test = await testsModel.findOne({
             where: { test_id: test_id },
-            attributes: ['total_question', 'question_level'],
+            attributes: ['total_question', 'question_level', 'name'],
         });
 
         const total_attempted = testHistory.attempted_questions.length;
@@ -264,6 +282,7 @@ exports.submitTest = async (req, res) => {
             total_marks,
             accuracy,
             Recommendations,
+            name: test.name,
             test_level: test.question_level,
         };
 
@@ -473,5 +492,38 @@ exports.testHistoryDelete = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: 'Error deleting test' });
+    }
+}
+//also give result of the test similar to the submittest test api above
+exports.submitRapidtest = async (req, res) => {
+    try {
+        const { user_id, test_id, questions } = req.body;
+        const test = await testsModel.findOne({
+            where: { test_id: test_id },
+            attributes: ['total_question', 'question_level'],
+        });
+        const attemptedQuestionsArray = questions.map(question => question.question_id);
+        const userAnswersArray = questions.map(question => question.userAnswer);
+        const correctAnswersArray = questions.map(question => question.correctAnswer);
+        const positiveMarks = parseInt(correctAnswersArray.length) * 4;
+        const negativeMarks = questions.reduce((sum, question) => sum + (question.userAnswer !== question.correctAnswer ? 1 : 0), 0);
+        const timeTakenArray = questions.map(question => question.timeTaken);
+
+        const TestHistory = await testHistoryModel.create({
+            user_id: user_id,
+            test_id: test_id,
+            user_answers: userAnswersArray,
+            attempted_questions: attemptedQuestionsArray,
+            time_taken: timeTakenArray,
+            positive_marks: positiveMarks,
+            negative_marks: negativeMarks,
+            correct_answers: correctAnswersArray,
+        });
+        res.status(201).json({ success: true, message: 'Test history created successfully', test_history_id: TestHistory.test_history_id });
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error submitting test' });
     }
 }
