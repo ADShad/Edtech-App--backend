@@ -335,7 +335,7 @@ exports.reviewTest = async (req, res) => {
         // Fetch questions attempted by the user
         const questionsOptions = await questionsModel.findAll({
             where: { question_id: { [Op.in]: reviewTest.attempted_questions } },
-            attributes: ['question_id', 'question_text', 'options', 'correct_option_index', 'negative_marking', 'question_level', 'chapter_id', 'section', 'description'],
+            attributes: ['question_id', 'question_text', 'options', 'correct_option_index', 'negative_marking', 'question_level', 'chapter_id', 'section', 'description', 'photo_url'],
         });
 
         // Attach userAnswers to each question
@@ -353,10 +353,10 @@ exports.reviewTest = async (req, res) => {
             where: { test_id: reviewTest.test_id },
             attributes: ['question_ids'],
         });
-        console.log(allQuestionIds);
+        // console.log(allQuestionIds);
         // Calculate unattempted questions
         const unattemptedQuestionIds = allQuestionIds.question_ids.filter(questionId => !reviewTest.attempted_questions.includes(questionId));
-        console.log(unattemptedQuestionIds);
+        // console.log(unattemptedQuestionIds);
         // Fetch unattempted questions
         const unattemptedQuestions = await questionsModel.findAll({
             where: { question_id: { [Op.in]: unattemptedQuestionIds } },
@@ -389,17 +389,29 @@ exports.reviewTest = async (req, res) => {
 exports.getTestHistoryList = async (req, res) => {
     try {
         const { user_id } = req.query;
-        const testHistoryList = await testHistoryModel.findAll({
-            where: { user_id: user_id, is_deleted: 0 },
-            attributes: ['test_history_id', 'test_id', 'positive_marks', 'negative_marks', 'created_at'],
+        const testHistoryList = await sequelize.query(`
+        SELECT TestHistory.test_history_id,
+               TestHistory.test_id,
+               TestHistory.positive_marks,
+               TestHistory.negative_marks,
+               TestHistory.created_at,
+               Tests.name
+        FROM TestHistory
+        JOIN Tests ON TestHistory.test_id = Tests.test_id
+        WHERE TestHistory.user_id = ${user_id}
+          AND TestHistory.is_deleted = 0
+    `, {
+            type: sequelize.QueryTypes.SELECT,
         });
+        // console.log(testHistoryList);
+
 
         // Calculate total marks for all tests
         // const totalMarks = testHistoryList.reduce((sum, test) => sum + (test.positive_marks - test.negative_marks), 0);
 
         // Add total_marks property to each test object in the testHistoryList array
         const testHistoryListWithTotalMarks = testHistoryList.map(test => ({
-            ...test.toJSON(),
+            ...test,
             total_marks: test.positive_marks - test.negative_marks,
         }));
 

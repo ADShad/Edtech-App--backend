@@ -52,6 +52,24 @@ module.exports = (sequelize, Sequelize) => {
             defaultValue: Sequelize.NOW,
             onUpdate: Sequelize.NOW,
         },
+        section: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            defaultValue: 0,
+        },
+        marks: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            defaultValue: 4,
+        },
+        description: {
+            type: Sequelize.TEXT,
+            allowNull: true,
+        },
+        photo_url: {
+            type: Sequelize.STRING(255),
+            allowNull: true,
+        },
     }, {
         tableName: 'Questions',
         timestamps: false,
