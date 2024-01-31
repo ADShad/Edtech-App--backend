@@ -261,6 +261,12 @@ exports.saveProgress = async (req, res) => {
                 where: { topic_id: TopicId.topic_id },
                 attributes: ['topic_name'],
             });
+        } else if (contentType === 'test') {
+            const test = await TestModel.findOne({
+                where: { test_id: contentId },
+                attributes: ['test_name'],
+            });
+            contentName = test.test_name;
         }
         if (historyRecord) {
             await historyModel.update(

@@ -512,7 +512,7 @@ exports.submitRapidtest = async (req, res) => {
         const { user_id, test_id, questions } = req.body;
         const test = await testsModel.findOne({
             where: { test_id: test_id },
-            attributes: ['total_question', 'question_level'],
+            attributes: ['total_question', 'question_level', 'name'],
         });
         const attemptedQuestionsArray = questions.map(question => question.question_id);
         const userAnswersArray = questions.map(question => question.userAnswer);
@@ -531,11 +531,59 @@ exports.submitRapidtest = async (req, res) => {
             negative_marks: negativeMarks,
             correct_answers: correctAnswersArray,
         });
-        res.status(201).json({ success: true, message: 'Test history created successfully', test_history_id: TestHistory.test_history_id });
+        const total_attempted = TestHistory.attempted_questions.length;
+        const total_correct = parseInt(TestHistory.positive_marks) / 4;
+        console.log(total_correct);
+        const total_incorrect = total_attempted - total_correct;
+        const total_marks = TestHistory.positive_marks - TestHistory.negative_marks;
+        const timeTakenArray1 = TestHistory.time_taken || [];
+        const average_time_taken = timeTakenArray1.length > 0 ? timeTakenArray1.reduce((sum, value) => sum + value, 0) / timeTakenArray1.length : 0;
+        const accuracy = (total_correct / total_attempted) * 100;
+        let Recommendations;
+        if (accuracy > 70) {
+            Recommendations = {
+                FirstPoint: "You are doing great, keep it up!",
+                SecondPoint: "Focus on other weak areas",
+            }
+        } else {
+            Recommendations = {
+                FirstPoint: "Watch the video again",
+                SecondPoint: "Pay Attention to crucial Topics!",
+            }
+        }
+        const testResult = {
+            average_time_taken,
+            total_question: test.total_question,
+            question_level: test.question_level,
+            total_attempted,
+            total_correct,
+            total_incorrect,
+            negative_marks: -1,
+            total_marks,
+            accuracy,
+            Recommendations,
+            name: test.name,
+            test_level: test.question_level,
+        };
+        res.status(201).json({ success: true, message: 'Test history created successfully', test_history_id: TestHistory.test_history_id, testResult });
 
 
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: 'Error submitting test' });
+    }
+}
+
+exports.getTestInfo = async (req, res) => {
+    try {
+        const { test_id } = req.query;
+        const test = await testsModel.findOne({
+            where: { test_id: test_id },
+            attributes: ['test_id', 'user_id', 'chapter_ids', 'test_type', 'duration_per_question', 'pattern', 'total_question', 'question_level', 'name'],
+        });
+        res.status(200).json({ success: true, message: 'Test info fetched successfully', data: test });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching test info' });
     }
 }
