@@ -307,7 +307,7 @@ exports.saveTest = async (req, res) => {
         }, {
             where: { test_history_id: test_history_id }
         });
-
+        console.log(saveTest);
         if (saveTest[0] === 0) {
             return res.status(404).json({
                 status: false,
@@ -585,5 +585,30 @@ exports.getTestInfo = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: 'Error fetching test info' });
+    }
+}
+
+exports.retakeTest = async (req, res) => {
+    try {
+        const { test_id } = req.query;
+        const testold = await testsModel.findOne({
+            where: { test_id: test_id },
+            attributes: ['test_id', 'user_id', 'chapter_ids', 'test_type', 'duration_per_question', 'pattern', 'total_question', 'question_level', 'name'],
+        });
+        const test = await testsModel.create({
+            user_id: testold.user_id,
+            chapter_ids: testold.chapter_ids,
+            test_type: testold.test_type,
+            total_question: testold.total_question,
+            duration_per_question: testold.duration_per_question,
+            pattern: testold.pattern,
+            name: testold.name,
+            question_level: testold.question_level
+        });
+
+        res.status(200).json({ success: true, message: 'test created successfully', data: test });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error retaking test' });
     }
 }
