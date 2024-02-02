@@ -1,5 +1,7 @@
 const db = require('../../Config/connection');
 const { Op } = require('sequelize');
+const multer = require('multer');
+const AWS = require('aws-sdk');
 const usersModel = db.usersModel;
 const paymentsModel = db.paymentsModel;
 const historyModel = db.historyModel;
@@ -83,3 +85,50 @@ exports.getHistory = async (req, res) => {
     }
 }
 
+
+exports.uploadProfilePicture = async (req, res) => {
+    try {
+        const { user_id } = req.query;
+        const s3 = new AWS.S3({
+            accessKeyId: process.env.AWS_ACCESS_KEY,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        });
+
+        // Multer setup for file handling
+        const storage = multer.memoryStorage();
+        const upload = multer({ storage: storage }).single('profile_picture');
+
+        upload(req, res, async (err) => {
+            if (err) {
+                console.error('Error:', err);
+                return res.status(500).json({ message: 'Error uploading file' });
+            }
+
+            const params = {
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: `profile_pictures/${user_id}`,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype,
+                ACL: 'public-read',
+            };
+
+            s3.upload(params, async (err, data) => {
+                if (err) {
+                    console.error('Error:', err);
+                    return res.status(500).json({ message: 'Error uploading file' });
+                }
+
+                console.log('Data:', data);
+                const updateProfilePicture = await usersModel.update(
+                    { user_photo: data.Location },
+                    { where: { id: user_id } }
+                );
+                return res.status(200).json({ message: 'Profile picture uploaded successfully', imageUrl: data.Location });
+
+            });
+        });
+    } catch (e) {
+        console.error('Error:', e);
+        return res.status(500).json({ message: 'Error uploading file' });
+    }
+};

@@ -43,5 +43,6 @@ module.exports = (app) => {
     router.post("/submitRapidtest", testController.submitRapidtest)
     router.get("/getTestInfo", testController.getTestInfo)
     router.get("/retakeTest", testController.retakeTest)
+    router.get("/uploadProfilePicture", userProfileController.uploadProfilePicture)
     app.use("/api/v1", router);
 };
