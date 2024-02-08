@@ -395,11 +395,13 @@ exports.getTestHistoryList = async (req, res) => {
                TestHistory.positive_marks,
                TestHistory.negative_marks,
                TestHistory.created_at,
-               Tests.name
+               Tests.name,
+               Tests.test_type
         FROM TestHistory
         JOIN Tests ON TestHistory.test_id = Tests.test_id
         WHERE TestHistory.user_id = ${user_id}
           AND TestHistory.is_deleted = 0
+          AND Tests.test_type = 'Timed'
     `, {
             type: sequelize.QueryTypes.SELECT,
         });
@@ -422,8 +424,6 @@ exports.getTestHistoryList = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error getting test history list' });
     }
 }
-
-
 exports.getClassTestList = async (req, res) => {
     try {
         const { chapterIds } = req.body;
