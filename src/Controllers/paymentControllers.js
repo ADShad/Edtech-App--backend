@@ -5,8 +5,8 @@ const Razorpay = require('razorpay');
 const { where } = require("sequelize");
 const shortid = require("shortid")
 const razorpay = new Razorpay({
-    key_id: 'rzp_test_KPDVnbAEecMRkj',
-    key_secret: 'swCOqu595Z6FSvv1Ox0PijgV'
+    key_id: process.env.key_id,
+    key_secret: process.env.key_secret
 });
 exports.payment = async (req, res) => {
     try {
