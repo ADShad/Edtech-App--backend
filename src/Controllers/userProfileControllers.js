@@ -132,3 +132,45 @@ exports.uploadProfilePicture = async (req, res) => {
         return res.status(500).json({ message: 'Error uploading file' });
     }
 };
+
+exports.getReferralCode = async (req, res) => {
+    try {
+        const { id } = req.query;
+        const user = await usersModel.findOne({ where: { id } });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        }
+        res.status(200).json({
+            status: true,
+            message: 'Referral code fetched successfully',
+            referralCode: user.referral_code,
+        });
+    } catch (error) {
+        console.error('Error fetching referral code:', error);
+        res.status(500).json({ error: 'Error fetching referral code' });
+    }
+}
+
+exports.getNameFromReferralCode = async (req, res) => {
+    try {
+        const { referral_code } = req.query;
+        const user = await usersModel.findOne({ where: { referral_code }, attributes: ['id', 'username', 'full_name'] });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        }
+        res.status(200).json({
+            status: true,
+            message: 'User found',
+            user: user,
+        });
+    } catch (error) {
+        console.error('Error fetching user from referral code:', error);
+        res.status(500).json({ error: 'Error fetching user from referral code' });
+    }
+}

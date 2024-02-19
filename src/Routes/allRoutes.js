@@ -44,5 +44,7 @@ module.exports = (app) => {
     router.get("/getTestInfo", testController.getTestInfo)
     router.get("/retakeTest", testController.retakeTest)
     router.get("/uploadProfilePicture", userProfileController.uploadProfilePicture)
+    router.get("/getReferralCode", userProfileController.getReferralCode)
+    router.get("/getNameFromReferralCode", userProfileController.getNameFromReferralCode)
     app.use("/api/v1", router);
 };

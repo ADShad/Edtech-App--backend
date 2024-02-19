@@ -75,8 +75,15 @@ exports.videos = async (req, res) => {
             const videosWithDate = await Promise.all(
                 videos.map(async (video, index) => {
                     const hoursToAdd = index * 24;
-                    const dateToBeWatched = new Date(courseStartDate);
+                    let dateToBeWatched = new Date(courseStartDate);
                     dateToBeWatched.setHours(dateToBeWatched.getHours() + hoursToAdd);
+
+                    // Skip Sundays and Wednesdays
+                    while (dateToBeWatched.getDay() === 0 || dateToBeWatched.getDay() === 3) {
+                        // Add 24 hours to skip to the next day
+                        dateToBeWatched.setHours(dateToBeWatched.getHours() + 24);
+                    }
+
                     const videoName = dummyVideoNames[index % dummyVideoNames.length];
                     // Get DurationPercentage from history model
                     const durationRecord = await historyModel.findOne({
