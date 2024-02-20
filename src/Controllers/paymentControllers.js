@@ -54,15 +54,16 @@ exports.payment = async (req, res) => {
             });
             console.log(checkReferralCode);
             if (!checkReferralCode && req.body.referralCode !== "") {
-                res.status(500).json({
-                    message: 'Invalid referral code',
-                });
+                console.log("here1");
+                // res.status(500).json({
+                //     message: 'Invalid referral code',
+                // });
             }
             else if (checkReferralCode?.dataValues.referral_code_used === 1 && req.body.referralCode !== "") {
                 console.log("here");
-                res.status(500).json({
-                    message: 'Referral code already used',
-                });
+                // res.status(500).json({
+                //     message: 'Referral code already used',
+                // });
             }
             else {
                 console.log("here2");
