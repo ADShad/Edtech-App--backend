@@ -1,6 +1,7 @@
 const db = require('../../Config/connection');
 const { Op } = require('sequelize');
 const topicsModel = require('../Models/topicsModel');
+const testHistoryModel = db.testsHistoryModel;
 const chaptersModel = db.chaptersModel;
 const sequelize = db.sequelize;
 const Sequelize = db.Sequelize;
@@ -143,8 +144,15 @@ exports.video = async (req, res) => {
             const query1 = `SELECT test_id FROM Tests
             WHERE JSON_CONTAINS(chapter_ids, '[${result[0].topic_id}]') AND test_type = 'RapidFire';
             `
+            let istestNew = 1;
             const [result1, meta2] = await sequelize.query(query1);
-
+            const istestHistory = await testHistoryModel.findOne({
+                where: { test_id: result1[0].test_id },
+                attributes: ['test_history_id']
+            })
+            if (istestHistory) {
+                istestNew = 0;
+            }
             console.log(result1[0].test_id);
             result[0].testId = result1[0].test_id;
 
@@ -158,6 +166,7 @@ exports.video = async (req, res) => {
                 videoCreatedAt: result[0].created_at,
                 notesUrl: result[0].notes_url,
                 testId: result[0].testId,
+                istestNew
             });
         } else {
             res.status(404).json({ error: 'Video not found' });
