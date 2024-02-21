@@ -46,5 +46,6 @@ module.exports = (app) => {
     router.get("/uploadProfilePicture", userProfileController.uploadProfilePicture)
     router.get("/getReferralCode", userProfileController.getReferralCode)
     router.get("/getNameFromReferralCode", userProfileController.getNameFromReferralCode)
+    router.get("/getTasks", myCourseController.getTasks)
     app.use("/api/v1", router);
 };

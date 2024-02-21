@@ -71,4 +71,8 @@ db.questionsModel = require('../src/Models/questionsModel')(
     sequelize,
     Sequelize
 );
+db.taskModel = require('../src/Models/taskModel')(
+    sequelize,
+    Sequelize
+);
 module.exports = db;

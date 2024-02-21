@@ -11,6 +11,7 @@ const TestModel = db.testsModel;
 const TopicsModel = db.topicsModel;
 const notesModel = db.notesModel;
 const subjectsModel = db.subjectsModel;
+const taskModel = db.taskModel;
 const historyModel = db.historyModel;
 exports.saveCourseandMethod = async (req, res) => {
     try {
@@ -74,16 +75,16 @@ exports.videos = async (req, res) => {
             // Calculate dateToBeWatched for each video
             const videosWithDate = await Promise.all(
                 videos.map(async (video, index) => {
-                    const hoursToAdd = index * 24;
                     let dateToBeWatched = new Date(courseStartDate);
-                    dateToBeWatched.setHours(dateToBeWatched.getHours() + hoursToAdd);
 
-                    // Skip Sundays and Wednesdays
-                    while (dateToBeWatched.getDay() === 0 || dateToBeWatched.getDay() === 3) {
-                        // Add 24 hours to skip to the next day
-                        dateToBeWatched.setHours(dateToBeWatched.getHours() + 24);
+                    // Adjust the date based on the index, skipping Sundays and Wednesdays
+                    for (let i = 0; i < index; i++) {
+                        dateToBeWatched.setDate(dateToBeWatched.getDate() + 1); // Increment the date by one day
+                        while (dateToBeWatched.getDay() === 0 || dateToBeWatched.getDay() === 3) {
+                            // If it's Sunday or Wednesday, add another day
+                            dateToBeWatched.setDate(dateToBeWatched.getDate() + 1);
+                        }
                     }
-
                     const videoName = dummyVideoNames[index % dummyVideoNames.length];
                     // Get DurationPercentage from history model
                     const durationRecord = await historyModel.findOne({
@@ -302,3 +303,84 @@ exports.saveProgress = async (req, res) => {
         });
     }
 }
+
+exports.getTasks = async (req, res) => {
+    try {
+        const { userId } = req.query;
+
+        // Fetch user information
+        const user = await usersModel.findOne({
+            attributes: ['active_courseid', 'course_start_date'],
+            where: { id: userId },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const courseId = user.active_courseid;
+        const courseStartDate = new Date(user.course_start_date);
+
+        // Function to calculate date based on day_id and course start date
+        // Function to calculate date based on day_id and course start date
+        const calculateDate = (dayId) => {
+            const date = new Date(courseStartDate);
+            let daysToAdd = dayId - 1; // Subtract 1 to match day_id indexing
+
+            // Loop through each day to skip Sundays and Wednesdays
+            for (let i = 0; i < daysToAdd; i++) {
+                date.setDate(date.getDate() + 1); // Increment date by one day
+
+                // If the current day is Sunday or Wednesday, skip to the next day
+                while (date.getDay() === 0 || date.getDay() === 3) {
+                    date.setDate(date.getDate() + 1); // Skip to the next day
+                }
+            }
+
+            return date;
+        };
+
+
+        // Fetch tasks for videos
+        const videoTasks = await taskModel.findAll({
+            where: { task_type: 'video' },
+            order: [['day_id', 'ASC']],
+        });
+
+        // Fetch tasks for notes
+        const noteTasks = await taskModel.findAll({
+            where: { task_type: 'notes' },
+            order: [['day_id', 'ASC']],
+        });
+
+        // Fetch tasks for tests
+        const testTasks = await taskModel.findAll({
+            where: { task_type: 'test' },
+            order: [['day_id', 'ASC']],
+        });
+        // console.log(videoTasks, noteTasks, testTasks);
+        // Assign dates to tasks
+        const assignDates = (tasks) => {
+            // console.log(tasks);
+            return tasks.map(task => ({
+                taskId: task.task_id,
+                taskType: task.task_type,
+                taskName: task.task_name,
+                contentId: task.content_id,
+                contentUrl: task.content_url,
+                date: calculateDate(task.day_id)
+            }));
+        };
+
+        // Prepare tasks with dates for response
+        const videoTasksWithDates = assignDates(videoTasks);
+        const noteTasksWithDates = assignDates(noteTasks);
+        const testTasksWithDates = assignDates(testTasks);
+
+        // Send tasks separately in the response
+        res.status(200).json({ videoTasks: videoTasksWithDates, noteTasks: noteTasksWithDates, testTasks: testTasksWithDates });
+    } catch (error) {
+        console.error('Error fetching tasks:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
