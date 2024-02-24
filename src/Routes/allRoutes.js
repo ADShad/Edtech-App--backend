@@ -47,5 +47,7 @@ module.exports = (app) => {
     router.get("/getReferralCode", userProfileController.getReferralCode)
     router.get("/getNameFromReferralCode", userProfileController.getNameFromReferralCode)
     router.get("/getTasks", myCourseController.getTasks)
+    router.get("/deleteProfile", userProfileController.deleteProfile)
+    router.post("/processDeleteProfile", userProfileController.processDeleteProfile)
     app.use("/api/v1", router);
 };

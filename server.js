@@ -5,7 +5,14 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const db = require("./Config/connection");
 require("dotenv").config();
-app.use(cors());
+app.use(cors(
+    {
+        origin: "*",
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        preflightContinue: false,
+        optionsSuccessStatus: 204
+    }
+));
 
 app.use(bodyParser.json({ limit: "16mb" }))
 app.use(bodyParser.urlencoded({ limit: "16mb", extended: true, parameterLimit: 50000 }))

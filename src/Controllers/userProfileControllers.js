@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const usersModel = db.usersModel;
+const bcrypt = require("bcrypt");
 const paymentsModel = db.paymentsModel;
 const historyModel = db.historyModel;
 exports.getUserProfile = async (req, res) => {
@@ -65,8 +66,8 @@ exports.getHistory = async (req, res) => {
         const history = await historyModel.findAll({
             where: { user_id: id },
             attributes: ['id', 'user_id', 'content_type', 'content_id', 'content_name', 'progress', 'created_at'],
-            order: [['created_at', 'DESC']], // Order by created_at in descending order
-            limit: 5, // Limit the result to 5 entries
+            order: [['created_at', 'DESC']],
+            limit: 5,
         });
         if (!history || history.length === 0) {
             return res.status(404).json({
@@ -174,3 +175,96 @@ exports.getNameFromReferralCode = async (req, res) => {
         res.status(500).json({ error: 'Error fetching user from referral code' });
     }
 }
+
+exports.deleteProfile = async (req, res) => {
+    try {
+        // Assuming you have a simple HTML form to take username and password
+        const htmlForm = `
+        <p>Enter your username and password to delete your profile</p>
+        <p>Caution: This action is irreversible. If any payments have been made within the app, they will not be refunded upon deletion of the account.</p>
+            <form action=${process.env.API_ENDPOINT} method="POST">
+            <label for="username">Username:</label><br>
+            <input type="text" id="username" name="username" required><br> <!-- Added 'required' attribute for validation -->
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br><br> <!-- Added 'required' attribute for validation -->
+            <input type="submit" value="Submit">
+            </form>
+        `;
+
+        res.send(htmlForm);
+    } catch (error) {
+        console.log('Error showing delete profile form:', error);
+        res.status(500).json({ error: 'Error showing delete profile form' });
+    }
+}
+
+exports.processDeleteProfile = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        console.log("Inside processDeleteProfile", username, password);
+
+        // Check if the user is valid and also check if the password is correct
+        // Assuming you have a method in your Profile model to delete by username and password
+        const user = await usersModel.findOne({
+            where: {
+                [Op.and]: [
+                    { username: username },
+                    { is_deleted: 0 }, // Check if the user is not deleted (assuming 0 means not deleted)
+                ],
+            },
+            attributes: ["id", "user_password"]
+        });
+
+        if (!user) {
+            // Send HTML response for invalid username or password
+            return res.status(401).send(`
+                <h1>Error: Invalid username or password</h1>
+                <p>Please check your credentials and try again.</p>
+            `);
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.user_password);
+
+        if (!passwordMatch) {
+            // Send HTML response for invalid username or password
+            return res.status(401).send(`
+                <h1>Error: Invalid username or password</h1>
+                <p>Please check your credentials and try again.</p>
+            `);
+        }
+
+        const is_deleted = await usersModel.update({
+            is_deleted: 1,
+        }, {
+            where: {
+                username: username,
+            }
+
+        });
+
+        if (is_deleted[0] === 0) {
+            // Send HTML response for error deleting profile
+            return res.status(404).send(`
+                <h1>Error: Profile deletion failed</h1>
+                <p>Sorry, we encountered an issue while deleting your profile. Please try again later.</p>
+            `);
+        }
+
+        console.log('is_deleted:', is_deleted);
+
+        // Send HTML response for successful profile deletion
+        res.status(200).send(`
+            <h1>Profile deleted successfully</h1>
+            <p>Your profile has been successfully deleted from our system.</p>
+        `);
+    } catch (error) {
+        console.log('Error deleting profile:', error);
+
+        // Send HTML response for internal server error
+        res.status(500).send(`
+            <h1>Error: Internal Server Error</h1>
+            <p>Sorry, we encountered an internal server error while processing your request. Please try again later.</p>
+        `);
+    }
+}
+
