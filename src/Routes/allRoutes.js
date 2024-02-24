@@ -43,7 +43,7 @@ module.exports = (app) => {
     router.post("/submitRapidtest", testController.submitRapidtest)
     router.get("/getTestInfo", testController.getTestInfo)
     router.get("/retakeTest", testController.retakeTest)
-    router.get("/uploadProfilePicture", userProfileController.uploadProfilePicture)
+    router.post("/uploadProfilePicture", userProfileController.uploadProfilePicture)
     router.get("/getReferralCode", userProfileController.getReferralCode)
     router.get("/getNameFromReferralCode", userProfileController.getNameFromReferralCode)
     router.get("/getTasks", myCourseController.getTasks)
