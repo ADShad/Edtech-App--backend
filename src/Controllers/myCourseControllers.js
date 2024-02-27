@@ -386,8 +386,37 @@ exports.getTasks = async (req, res) => {
         const noteTasksWithDates = assignDates(noteTasks);
         const testTasksWithDates = assignDates(testTasks);
 
+        const allTasks = [...videoTasksWithDates, ...noteTasksWithDates, ...testTasksWithDates];
+
+        // Query the history model
+        const historyQueries = allTasks.map(task => ({
+            content_id: task.contentId,
+            content_type: task.taskType,
+            user_id: userId
+        }));
+
+        // Query the history model
+        const historyRecords = await Promise.all(historyQueries.map(query => historyModel.findOne({ where: query })));
+
+        // Iterate through tasks and update them with is_done flag
+        const tasksWithStatus = allTasks.map((task, index) => {
+            const historyRecord = historyRecords[index];
+            if (historyRecord) {
+                // If history record exists, set is_done based on duration
+                task.is_done = historyRecord.duration !== 0 ? 1 : 0;
+            } else {
+                // If no history record exists, set is_done to 0
+                task.is_done = 0;
+            }
+            return task;
+        });
+
+        // Separate tasks into video, note, and test tasks again
+        const videoTasksWithStatus = tasksWithStatus.filter(task => task.taskType === 'video');
+        const noteTasksWithStatus = tasksWithStatus.filter(task => task.taskType === 'notes');
+        const testTasksWithStatus = tasksWithStatus.filter(task => task.taskType === 'test');
         // Send tasks separately in the response
-        res.status(200).json({ videoTasks: videoTasksWithDates, noteTasks: noteTasksWithDates, testTasks: testTasksWithDates });
+        res.status(200).json({ videoTasks: videoTasksWithStatus, noteTasks: noteTasksWithStatus, testTasks: testTasksWithStatus });
     } catch (error) {
         console.error('Error fetching tasks:', error);
         res.status(500).json({ error: 'Internal Server Error' });
