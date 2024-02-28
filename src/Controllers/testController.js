@@ -612,3 +612,61 @@ exports.retakeTest = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error retaking test' });
     }
 }
+
+exports.RapidTestScorecard = async (req, res) => {
+    try {
+        const { user_id, test_id } = req.query;
+        console.log(user_id, test_id);
+        const testHistory = await testHistoryModel.findOne({
+            where: { test_id: test_id, user_id: user_id },
+            attributes: ['test_id', 'positive_marks', 'negative_marks', 'correct_answers', 'user_answers', 'attempted_questions', 'time_taken'],
+            order: [['created_at', 'DESC']], // Order by created_at in descending order
+            limit: 1 // Limit the result to 1 entry
+        });
+        if (!testHistory) {
+            return res.status(404).json({ success: false, message: 'Test History not found' });
+        }
+
+        const test = await testsModel.findOne({
+            where: { test_id: testHistory.test_id },
+            attributes: ['total_question', 'question_level', 'name'],
+        });
+        const total_attempted = testHistory.attempted_questions.length;
+        const total_correct = testHistory.correct_answers.length;
+        const total_incorrect = total_attempted - total_correct;
+        const total_marks = testHistory.positive_marks - testHistory.negative_marks;
+        const timeTakenArray = testHistory.time_taken || [];
+        const average_time_taken = timeTakenArray.length > 0 ? timeTakenArray.reduce((sum, value) => sum + value, 0) / timeTakenArray.length : 0;
+        const accuracy = (total_correct / total_attempted) * 100;
+        let Recommendations;
+        if (accuracy > 70) {
+            Recommendations = {
+                FirstPoint: "You are doing great, keep it up!",
+                SecondPoint: "Focus on other weak areas",
+            }
+        } else {
+            Recommendations = {
+                FirstPoint: "Watch the video again",
+                SecondPoint: "Pay Attention to crucial Topics!",
+            }
+        }
+        const testResult = {
+            average_time_taken,
+            total_question: test.total_question,
+            question_level: test.question_level,
+            total_attempted,
+            total_correct,
+            total_incorrect,
+            negative_marks: -1,
+            total_marks,
+            accuracy,
+            Recommendations,
+            name: test.name,
+            test_level: test.question_level,
+        };
+        res.status(200).json({ success: true, message: 'Test Scorecard fetched successfully', testResult });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching Rapid Test Scorecard' });
+    }
+}

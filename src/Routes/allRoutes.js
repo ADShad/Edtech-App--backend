@@ -51,5 +51,6 @@ module.exports = (app) => {
     router.post("/processDeleteProfile", userProfileController.processDeleteProfile)
     router.get("/getVideosPerChapter", myCourseController.getVideosPerChapter)
     router.get("/getTopicwithVideos", myCourseController.getTopicwithVideos)
+    router.get("/RapidTestScorecard", testController.RapidTestScorecard)
     app.use("/api/v1", router);
 };
