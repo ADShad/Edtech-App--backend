@@ -1,6 +1,6 @@
 const db = require('../../Config/connection');
 const { Op } = require('sequelize');
-const topicsModel = require('../Models/topicsModel');
+// const topicsModel = require('../Models/topicsModel');
 const testHistoryModel = db.testsHistoryModel;
 const chaptersModel = db.chaptersModel;
 const sequelize = db.sequelize;
@@ -422,3 +422,73 @@ exports.getTasks = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+exports.getVideosPerChapter = async (req, res) => {
+    try {
+        const { courseId } = req.query;
+        console.log(courseId);
+        const videos = await videosModel.findAll({
+            attributes: ['video_id', 'video_url', 'topic_id', 'chapter_id'],
+            where: { course_id: courseId },
+            order: [['video_id', 'ASC']],
+        });
+        // console.log(videos);
+        const chapters = await chaptersModel.findAll({
+            attributes: ['chapter_id', 'chapter_name'],
+            where: { course_id: courseId },
+        });
+        // console.log(chapters);
+        const topics = await TopicsModel.findAll({
+            attributes: ['topic_id', 'topic_name'],
+            where: { course_id: parseInt(courseId) },
+        });
+        // console.log(topics);
+        const videosPerChapter = chapters.map(chapter => {
+            // console.log(chapter.dataValues);
+            const chapterVideos = videos.filter(video => video.chapter_id === chapter.chapter_id);
+            // console.log(chapterVideos);
+            return {
+                chapterId: chapter.chapter_id,
+                chapterName: chapter.chapter_name,
+                videos: chapterVideos.map(video => {
+                    const topic = topics.find(topic => topic.topic_id === video.topic_id);
+                    return {
+                        videoId: video.video_id,
+                        videoUrl: video.video_url,
+                        topicName: topic ? topic.topic_name : 'Unknown Topic'
+                    };
+                })
+            };
+        });
+
+        res.status(200).json(videosPerChapter);
+    } catch (error) {
+        console.error('Error fetching videos per chapter:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+exports.getTopicwithVideos = async (req, res) => {
+    try {
+        const { chapterId } = req.query;
+
+        const query = `
+            SELECT t.topic_id, t.topic_name, v.video_url, v.video_id 
+            FROM Topics t 
+            LEFT JOIN Videos v ON t.topic_id = v.topic_id 
+            WHERE t.chapter_id = ${chapterId};
+        `;
+
+        const [result, meta] = await sequelize.query(query)
+
+
+        res.status(200).json({
+            status: true,
+            message: 'Topics Mapping fetched successfully',
+            data: result,
+        });
+    } catch (error) {
+        console.error('Error fetching topics mapping:', error);
+        res.status(500).json({ error: 'Error fetching topics mapping' });
+    }
+}

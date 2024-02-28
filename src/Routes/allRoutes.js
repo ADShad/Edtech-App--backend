@@ -49,5 +49,7 @@ module.exports = (app) => {
     router.get("/getTasks", myCourseController.getTasks)
     router.get("/deleteProfile", userProfileController.deleteProfile)
     router.post("/processDeleteProfile", userProfileController.processDeleteProfile)
+    router.get("/getVideosPerChapter", myCourseController.getVideosPerChapter)
+    router.get("/getTopicwithVideos", myCourseController.getTopicwithVideos)
     app.use("/api/v1", router);
 };
