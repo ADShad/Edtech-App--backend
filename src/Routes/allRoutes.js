@@ -58,5 +58,6 @@ module.exports = (app) => {
     router.post("/updateWeakAreas", myCourseController.updateWeakAreas)
     router.get("/getWeakAreas", myCourseController.getWeakAreas)
     router.post("/getUsername", loginController.getUsernameWithOtp)
+    router.get("/getQuotes", homeScreenController.getQuotes)
     app.use("/api/v1", router);
 };

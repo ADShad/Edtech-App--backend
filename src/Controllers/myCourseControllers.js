@@ -117,7 +117,7 @@ exports.videos = async (req, res) => {
 
 exports.video = async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId, userId } = req.body;
         const query = `
             SELECT 
                 v.video_id,
@@ -155,7 +155,16 @@ exports.video = async (req, res) => {
             }
             console.log(result1[0].test_id);
             result[0].testId = result1[0].test_id;
-
+            //check if video_id is present in the weak_areas_id array in the user table
+            const user = await usersModel.findOne({
+                where: { id: userId },
+                attributes: ['weak_areas_id'],
+            });
+            let WeakArea = false;
+            let weakAreasId = user.weak_areas_id;
+            if (weakAreasId.includes(videoId)) {
+                WeakArea = true;
+            }
             res.status(200).json({
                 videoId: result[0].video_id,
                 videoUrl: result[0].video_url,
@@ -166,7 +175,8 @@ exports.video = async (req, res) => {
                 videoCreatedAt: result[0].created_at,
                 notesUrl: result[0].notes_url,
                 testId: result[0].testId,
-                istestNew
+                istestNew,
+                WeakArea
             });
         } else {
             res.status(404).json({ error: 'Video not found' });
@@ -539,6 +549,13 @@ exports.updateWeakAreas = async (req, res) => {
             attributes: ['weak_areas_id'],
         });
         let weakAreasId = user.weak_areas_id;
+        // check if video already exist in the array
+        if (weakAreasId.includes(Id)) {
+            return res.status(200).json({
+                status: true,
+                message: 'Video already exists in weak areas',
+            });
+        }
         if (weakAreasId === null) {
             weakAreasId = [Id];
         } else {
