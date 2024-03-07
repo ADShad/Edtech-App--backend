@@ -5,6 +5,7 @@ module.exports = (app) => {
     const MappingController = require("../Controllers/mappingControllers.js")
     const userProfileController = require("../Controllers/userProfileControllers.js")
     const myCourseController = require("../Controllers/myCourseControllers.js")
+    const homeScreenController = require("../Controllers/homeScreenController.js")
     const jwtAuth = require("../../Services/jwt");
     var router = require("express").Router();
     router.get("/", jwtAuth.jwtAuthentication, testController.testapi)
@@ -52,5 +53,10 @@ module.exports = (app) => {
     router.get("/getVideosPerChapter", myCourseController.getVideosPerChapter)
     router.get("/getTopicwithVideos", myCourseController.getTopicwithVideos)
     router.get("/RapidTestScorecard", testController.RapidTestScorecard)
+    router.get("/getBannerUrls", homeScreenController.getBannerUrls)
+    router.get("/updateStreakCount", userProfileController.updateStreakCount)
+    router.post("/updateWeakAreas", myCourseController.updateWeakAreas)
+    router.get("/getWeakAreas", myCourseController.getWeakAreas)
+    router.post("/getUsername", loginController.getUsernameWithOtp)
     app.use("/api/v1", router);
 };

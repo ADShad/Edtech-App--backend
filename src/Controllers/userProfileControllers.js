@@ -40,7 +40,7 @@ exports.getUserProfile = async (req, res) => {
 
         const userProfile = await usersModel.findOne({
             where: { id: id, is_deleted: 0 },
-            attributes: ['id', 'username', 'phone_number', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid', 'created_at'],
+            attributes: ['id', 'username', 'phone_number', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid', 'created_at', 'streak_count'],
         });
         if (!userProfile) {
             return res.status(404).json({
@@ -268,6 +268,32 @@ exports.processDeleteProfile = async (req, res) => {
             <h1>Error: Internal Server Error</h1>
             <p>Sorry, we encountered an internal server error while processing your request. Please try again later.</p>
         `);
+    }
+}
+
+exports.updateStreakCount = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const user = await usersModel.findOne({ where: { id: userId } });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        }
+        const streakCount = user.streak_count + 1;
+        const updatedStreakCount = await usersModel.update(
+            { streak_count: streakCount },
+            { where: { id: userId } }
+        );
+        res.status(200).json({
+            status: true,
+            message: 'Streak count updated successfully',
+            streakCount,
+        });
+    } catch (error) {
+        console.error('Error updating streak count:', error);
+        res.status(500).json({ error: 'Error updating streak count' });
     }
 }
 

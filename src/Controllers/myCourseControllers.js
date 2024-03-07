@@ -179,12 +179,12 @@ exports.video = async (req, res) => {
 
 exports.getNotes = async (req, res) => {
     try {
-        const { subjectId } = req.body;
+        const { chapterId } = req.body;
 
         // Fetching notes
         const notes = await notesModel.findAll({
             attributes: ['notes_id', 'notes_url', 'chapter_id', 'subject_id'],
-            where: { subject_id: subjectId },
+            where: { chapter_id: chapterId },
         });
 
         if (!notes || notes.length === 0) {
@@ -192,22 +192,17 @@ exports.getNotes = async (req, res) => {
         }
 
         // Fetching chapter name
-        const chapters = await chaptersModel.findAll({
+        const chapterName = await chaptersModel.findOne({
             attributes: ['chapter_id', 'chapter_name'],
-            where: { subject_id: subjectId },
+            where: { chapter_id: chapterId },
         });
 
-        // Mapping notes and chapter data
-        const notesDetails = notes.map(note => {
-            const chapter = chapters.find(chap => chap.chapter_id === note.chapter_id);
-            return {
-                notesId: note.notes_id,
-                notesUrl: note.notes_url,
-                chapterName: chapter ? chapter.chapter_name : 'Unknown Chapter',
-                // Add subjectName property if you fetch subject name
-            };
-        });
-        console.log(notesDetails);
+        const notesDetails = notes.map(note => ({
+            notesId: note.notes_id,
+            notesUrl: note.notes_url,
+            chapterName: chapterName.chapter_name,
+        }));
+        // console.log(notesDetails);
         res.status(200).json(notesDetails);
     } catch (error) {
         console.error('Error fetching notes:', error);
@@ -490,5 +485,87 @@ exports.getTopicwithVideos = async (req, res) => {
     } catch (error) {
         console.error('Error fetching topics mapping:', error);
         res.status(500).json({ error: 'Error fetching topics mapping' });
+    }
+}
+
+exports.getWeakAreas = async (req, res) => {
+    try {
+        const { userId } = req.query;
+
+        const query = `
+            SELECT weak_areas_id from users where id = ${userId};
+        `;
+
+        const [result, meta] = await sequelize.query(query);
+        const weakAreasId = result[0].weak_areas_id;
+        const videoDetails = await videosModel.findAll({
+            attributes: ['video_id', 'video_url', 'topic_id', 'chapter_id'],
+            where: { video_id: weakAreasId },
+            order: [['video_id', 'ASC']],
+        });
+        // console.log(videoDetails);
+        const videoDetailsWithTopicName = await Promise.all(
+
+            videoDetails.map(async (video) => {
+                const topic = await TopicsModel.findOne({
+                    attributes: ['topic_name'],
+                    where: { topic_id: video.topic_id },
+                });
+                return {
+                    videoId: video.video_id,
+                    videoUrl: video.video_url,
+                    topicName: topic.topic_name,
+                }
+            })
+        )
+
+        res.status(200).json({
+            status: true,
+            message: 'Weak Areas fetched successfully',
+            data: videoDetailsWithTopicName,
+        });
+    } catch (error) {
+        console.error('Error fetching weak areas:', error);
+        res.status(500).json({ error: 'Error fetching weak areas' });
+    }
+}
+
+exports.updateWeakAreas = async (req, res) => {
+    try {
+        const { userId, Id } = req.body;
+        //check if weak areas has an emty array or not
+        const user = await usersModel.findOne({
+            where: { id: userId },
+            attributes: ['weak_areas_id'],
+        });
+        let weakAreasId = user.weak_areas_id;
+        if (weakAreasId === null) {
+            weakAreasId = [Id];
+        } else {
+            if (weakAreasId.length === 0) {
+                weakAreasId = [Id];
+            } else {
+                weakAreasId.push(Id);
+            }
+        }
+        const [updateWeakAreas] = await usersModel.update(
+            { weak_areas_id: weakAreasId },
+            { where: { id: userId } }
+        );
+
+        if (updateWeakAreas === 0) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        } else {
+            res.status(200).json({
+                status: true,
+                message: 'Weak Areas updated successfully',
+            });
+        }
+    } catch (error) {
+        console.error('Error updating weak areas:', error);
+        res.status(500).json({ error: 'Error updating weak areas' });
     }
 }

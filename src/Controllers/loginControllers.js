@@ -363,3 +363,63 @@ exports.updatePersonalDetails = async (req, res) => {
         });
     }
 }
+
+exports.getUsernameWithOtp = async (req, res) => {
+    try {
+        const { mobile, otp } = req.body;
+        if (!mobile || !otp) {
+            return res.status(400).json({
+                status: false,
+                message: "MobileNo, and OTP are required",
+            });
+        }
+        const user = await usersModel.findOne({
+            where: {
+                [Op.and]: [
+                    { phone_number: mobile },
+                    { is_deleted: 0 },
+                ],
+            },
+        });
+        if (!user) {
+            return res.status(401).json({
+                status: false,
+                message: "User not found",
+            });
+        }
+        var options = {
+            method: "GET",
+            url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
+        };
+        request(options, function (error, response) {
+            if (error) {
+                return res.status(200).json({
+                    status: false,
+                    data: error,
+                });
+            } else {
+                let processedData = JSON.parse(response.body);
+                // console.log(response.body);
+
+                if (processedData.type == "error") {
+                    return res.status(400).json({
+                        status: false,
+                        message: "Invalid OTP",
+                    });
+                } else {
+                    return res.status(200).json({
+                        status: true,
+                        message: "User found",
+                        userName: user.username,
+                    });
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error in getting username with otp:", error);
+        return res.status(500).json({
+            status: false,
+            error: "Internal Server Error",
+        });
+    }
+}

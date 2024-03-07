@@ -180,6 +180,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(255),
             allowNull: true,
         },
+        streak_count: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            defaultValue: 0,
+        },
+        weak_areas_id: {
+            type: Sequelize.JSON,
+            allowNull: true,
+            defaultValue: [],
+        },
         created_at: {
             type: Sequelize.DATE,
             allowNull: true,
