@@ -146,7 +146,7 @@ exports.register = async (req, res) => {
 };
 exports.login = async (req, res) => {
     try {
-        const { userName, password } = req.body;
+        const { userName, password, otp } = req.body;
         // console.log(req.body);
         // Simple validation checks
         if (!userName || !password) {
@@ -164,7 +164,7 @@ exports.login = async (req, res) => {
                     { is_deleted: 0 }, // Check if the user is not deleted (assuming 0 means not deleted)
                 ],
             },
-            attributes: ["id", "user_password"]
+            attributes: ["id", "user_password", "phone_number"]
         });
 
         if (!user) {
@@ -173,7 +173,33 @@ exports.login = async (req, res) => {
                 message: "Invalid username or password",
             });
         }
+        let mobile = user.phone_number;
+        var options = {
+            method: "GET",
+            url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
+        };
+        let isTest = 0;
+        if (isTest !== 1) {
+            const response = await new Promise((resolve, reject) => {
+                request(options, function (error, response) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+            const processedData = JSON.parse(response.body);
 
+            if (processedData.type === "error") {
+                return res.status(400).json({
+                    status: false,
+                    message: "Invalid OTP",
+                });
+            } else {
+                success = true;
+            }
+        }
         // Compare the provided password with the hashed password in the database
         const passwordMatch = await bcrypt.compare(password, user.user_password);
 

@@ -518,16 +518,22 @@ exports.getWeakAreas = async (req, res) => {
 
             videoDetails.map(async (video) => {
                 const topic = await TopicsModel.findOne({
-                    attributes: ['topic_name'],
+                    attributes: ['topic_name', 'subject_id'],
                     where: { topic_id: video.topic_id },
+                });
+                const section = await subjectsModel.findOne({
+                    attributes: ['section'],
+                    where: { subject_id: topic.subject_id },
                 });
                 return {
                     videoId: video.video_id,
                     videoUrl: video.video_url,
                     topicName: topic.topic_name,
+                    section: section.section
                 }
             })
         )
+        //also need to get section of that video, get subject id from topics table and then section from subject table
 
         res.status(200).json({
             status: true,
