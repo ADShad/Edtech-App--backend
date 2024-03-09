@@ -1,4 +1,6 @@
 const db = require("../../Config/connection");
+const questionsModel = db.questionsModel;
+const testsModel = db.testsModel;
 const methodMappingModel = db.methodMappingModel;
 const courseMappingModel = db.courseMappingModel
 const chaptersModel = db.chaptersModel;
@@ -127,5 +129,118 @@ exports.patternMapping = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ success: false, message: 'Error fetching test questions' });
+    }
+};
+
+exports.getQuestionBankTestIds = async (req, res) => {
+    try {
+        const testIds = await testsModel.findAll({
+            where: {
+                test_type: 'QuestionBank'
+            },
+            attributes: ['test_id', 'chapter_ids', 'name'],
+        });
+
+        res.status(200).json({ success: true, testIds });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching test questions' });
+    }
+}
+
+exports.getQuestionbankQuestions = async (req, res) => {
+    try {
+        const { chapter_id, level } = req.query;
+        let questions;
+        if (level == 1) {
+            questions = await questionsModel.findAll({
+                where: {
+                    chapter_id: chapter_id,
+                    question_level: "Easy"
+                },
+                attributes: ['question_id', 'test_id', 'chapter_id', 'question_text', 'question_level', 'correct_option_index', 'options', 'description'],
+            });
+        } else if (level == 2) {
+            questions = await questionsModel.findAll({
+                where: {
+                    chapter_id: chapter_id,
+                    question_level: "Average"
+                },
+                attributes: ['question_id', 'test_id', 'chapter_id', 'question_text', 'question_level', 'correct_option_index', 'options', 'description'],
+            });
+        }
+        else {
+            questions = await questionsModel.findAll({
+                where: {
+                    chapter_id: chapter_id,
+                    question_level: "Master"
+                },
+                attributes: ['question_id', 'test_id', 'chapter_id', 'question_text', 'question_level', 'correct_option_index', 'options', 'description'],
+            });
+        }
+        res.status(200).json({ success: true, questions });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching test questions' });
+    }
+}
+
+exports.achievementsList = async (req, res) => {
+    try {
+        const achievements = [
+            {
+                id: 1,
+                name: 'Test Player',
+                description: 'Level 01 - Solved 300 Test Questions',
+                isAchieved: true // Assuming the user has achieved this
+            },
+            {
+                id: 2,
+                name: 'Spectator',
+                description: 'Level 01 - Watched 9000 Mins of Video Lectures',
+                isAchieved: false // Assuming the user has not achieved this yet
+            },
+            {
+                id: 3,
+                name: 'Champion',
+                description: 'Level 01 - Productive 100 hrs spent on IOASIS',
+                isAchieved: false
+            },
+            {
+                id: 4,
+                name: 'Flash Lord',
+                description: 'Level 01 - Learnt 500 Flash Cards on IOASIS',
+                isAchieved: false
+            },
+            {
+                id: 5,
+                name: 'Referral Rockstar',
+                description: 'Level 01 - Earned Rs. 300 via Referrals',
+                isAchieved: false
+            },
+            {
+                id: 6,
+                name: 'Master of Connections',
+                description: 'Level 01 - Connected with 100+ Friends',
+                isAchieved: false
+            },
+            {
+                id: 7,
+                name: 'Quiz Mastero',
+                description: 'Level 01 - Solved 300+ Rapid Test Questions',
+                isAchieved: true
+            },
+            {
+                id: 8,
+                name: 'Trail Blazer',
+                description: 'Level 01 - Gained 100+ Followers on Profile',
+                isAchieved: false
+            }
+        ];
+
+        res.json({ success: true, achievements });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Error fetching achievements' });
     }
 };

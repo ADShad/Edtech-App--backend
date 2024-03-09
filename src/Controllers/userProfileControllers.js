@@ -297,3 +297,140 @@ exports.updateStreakCount = async (req, res) => {
     }
 }
 
+exports.getProfileCompletion = async (req, res) => {
+    try {
+        // Personal Information (5% each): Full Name, Address, City, District, Gender, Date of Birth, Father's Name, Mother's Name, School Name, Username.
+        // Contact Information (10% each): Email, Phone Number, Alternate Contact.
+        // Additional Information (10% each): Profile Picture, Bio.    
+        const { userId } = req.query;
+        const user = await usersModel.findOne({ where: { id: userId } });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        }
+        const personalInfoFields = ['full_name', 'address', 'city', 'district', 'gender', 'date_of_birth', 'father_name', 'mother_name', 'school_name', 'username'];
+        const contactInfoFields = ['email_address', 'phone_number', 'alternate_contact'];
+        const additionalInfoFields = ['profile_picture', 'bio'];
+
+        let totalPercentage = 0;
+
+        // Calculate percentage for personal information fields
+        const personalInfoPercentage = personalInfoFields.reduce((percentage, field) => {
+            if (user[field]) {
+                return percentage + 5;
+            }
+            return percentage;
+        }, 0);
+
+        totalPercentage += personalInfoPercentage;
+
+        // Calculate percentage for contact information fields
+        const contactInfoPercentage = contactInfoFields.reduce((percentage, field) => {
+            if (user[field]) {
+                return percentage + 10;
+            }
+            return percentage;
+        }, 0);
+
+        totalPercentage += contactInfoPercentage;
+
+        // Calculate percentage for additional information fields
+        const additionalInfoPercentage = additionalInfoFields.reduce((percentage, field) => {
+            if (user[field]) {
+                return percentage + 10;
+            }
+            return percentage;
+        }, 0);
+
+        totalPercentage += additionalInfoPercentage;
+
+        res.status(200).json({
+            status: true,
+            message: 'Profile completion fetched successfully',
+            completionPercentage: totalPercentage,
+        });
+    } catch (error) {
+        console.error('Error fetching profile completion:', error);
+        res.status(500).json({ error: 'Error fetching profile completion' });
+    }
+}
+
+exports.getUserDetailsByFlag = async (req, res) => {
+    try {
+        const { userId, flag } = req.query;
+        const user = await usersModel.findOne({ where: { id: userId } });
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        }
+
+        let userDetails = {};
+
+        switch (flag) {
+            case 'personal':
+                userDetails = {
+                    full_name: user.full_name,
+                    address: user.user_address,
+                    city: user.city,
+                    district: user.district,
+                    gender: user.gender,
+                    date_of_birth: user.date_of_birth,
+                    email: user.email_address,
+                    phone_number: user.phone_number,
+                }
+                break;
+            case 'family':
+                userDetails = {
+                    father_name: user.father_name,
+                    mother_name: user.mother_name,
+                    schoolName: user.tenth_school_name,
+                    collegeName: user.college_name,
+                    alternateNumber: user.alternate_phone_number,
+                }
+                break;
+            case 'bio':
+                userDetails = {
+                    userName: user.username,
+                    bio: user.bio,
+                }
+                break;
+            default:
+                //in default get ALL THE MENTIONED COLUMNS  
+                userDetails = {
+                    full_name: user.full_name,
+                    address: user.user_address,
+                    city: user.city,
+                    district: user.district,
+                    gender: user.gender,
+                    date_of_birth: user.date_of_birth,
+                    email: user.email_address,
+                    phone_number: user.phone_number,
+                    father_name: user.father_name,
+                    mother_name: user.mother_name,
+                    schoolName: user.tenth_school_name,
+                    collegeName: user.college_name,
+                    alternateNumber: user.alternate_phone_number,
+                    userName: user.username,
+                    bio: user.bio,
+                    streakCount: user.streak_count,
+                    createdAt: user.created_at,
+                    active_courseid: user.active_courseid,
+                    study_methodid: user.study_methodid,
+                }
+                break;
+        }
+        res.status(200).json({
+            status: true,
+            message: 'User details fetched successfully',
+            userDetails,
+        });
+    } catch (error) {
+        console.error('Error fetching user details by flag:', error);
+        res.status(500).json({ error: 'Error fetching user details by flag' });
+    }
+}
+

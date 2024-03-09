@@ -190,6 +190,11 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: true,
             defaultValue: [],
         },
+        saved_video_ids: {
+            type: Sequelize.JSON,
+            allowNull: true,
+            defaultValue: [],
+        },
         created_at: {
             type: Sequelize.DATE,
             allowNull: true,

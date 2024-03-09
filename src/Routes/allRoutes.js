@@ -59,5 +59,12 @@ module.exports = (app) => {
     router.get("/getWeakAreas", myCourseController.getWeakAreas)
     router.post("/getUsername", loginController.getUsernameWithOtp)
     router.get("/getQuotes", homeScreenController.getQuotes)
+    router.get("/getQuestionBankTestIds", MappingController.getQuestionBankTestIds)
+    router.get("/getQuestionbankQuestions", MappingController.getQuestionbankQuestions)
+    router.get("/getProfileCompletion", userProfileController.getProfileCompletion)
+    router.get("/getUserDetailsByFlag", userProfileController.getUserDetailsByFlag)
+    router.get("/achievementsList", MappingController.achievementsList)
+    router.post("/updateSavedVideos", myCourseController.updateSavedVideos)
+    router.get("/getSavedVideos", myCourseController.getSavedVideos)
     app.use("/api/v1", router);
 };

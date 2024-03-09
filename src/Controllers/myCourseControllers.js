@@ -130,9 +130,11 @@ exports.video = async (req, res) => {
                 t.description AS topic_description,
                 s.subject_name,
                 cm.course_title AS course,
+                c.chapter_name,
                 n.notes_url
             FROM Videos v
             LEFT JOIN Topics t ON v.topic_id = t.topic_id
+            LEFT JOIN Chapters c ON v.chapter_id = c.chapter_id
             LEFT JOIN Subjects s ON v.subject_id = s.subject_id
             LEFT JOIN Notes n ON v.topic_id = n.topic_id
             LEFT JOIN course_mapping cm ON v.course_id = cm.course_id
@@ -175,6 +177,7 @@ exports.video = async (req, res) => {
                 videoCreatedAt: result[0].created_at,
                 notesUrl: result[0].notes_url,
                 testId: result[0].testId,
+                chapterName: result[0].chapter_name,
                 istestNew,
                 WeakArea
             });
@@ -590,5 +593,89 @@ exports.updateWeakAreas = async (req, res) => {
     } catch (error) {
         console.error('Error updating weak areas:', error);
         res.status(500).json({ error: 'Error updating weak areas' });
+    }
+}
+
+exports.updateSavedVideos = async (req, res) => {
+    try {
+        const { userId, videoId } = req.body;
+        const user = await usersModel.findOne({
+            where: { id: userId },
+            attributes: ['saved_video_ids'],
+        });
+        let savedVideoIds = user.saved_video_ids;
+        if (savedVideoIds === null) {
+            savedVideoIds = [videoId];
+        } else {
+            if (savedVideoIds.length === 0) {
+                savedVideoIds = [videoId];
+            } else {
+                savedVideoIds.push(videoId);
+            }
+        }
+        const [updateSavedVideos] = await usersModel.update(
+            { saved_video_ids: savedVideoIds },
+            { where: { id: userId } }
+        );
+
+        if (updateSavedVideos === 0) {
+            return res.status(404).json({
+                status: false,
+                message: 'User not found',
+            });
+        } else {
+            res.status(200).json({
+                status: true,
+                message: 'Saved Videos updated successfully',
+            });
+        }
+    } catch (error) {
+        console.error('Error updating saved videos:', error);
+        res.status(500).json({ error: 'Error updating saved videos' });
+    }
+}
+
+exports.getSavedVideos = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const user = await usersModel.findOne({
+            where: { id: userId },
+            attributes: ['saved_video_ids'],
+        });
+        let savedVideoIds = user.saved_video_ids;
+        if (savedVideoIds === null) {
+            savedVideoIds = [];
+        }
+        const videoDetails = await videosModel.findAll({
+            attributes: ['video_id', 'video_url', 'topic_id', 'chapter_id'],
+            where: { video_id: savedVideoIds },
+            order: [['video_id', 'ASC']],
+        });
+        const videoDetailsWithTopicName = await Promise.all(
+            videoDetails.map(async (video) => {
+                const topic = await TopicsModel.findOne({
+                    attributes: ['topic_name', 'subject_id'],
+                    where: { topic_id: video.topic_id },
+                });
+                const section = await subjectsModel.findOne({
+                    attributes: ['section'],
+                    where: { subject_id: topic.subject_id },
+                });
+                return {
+                    videoId: video.video_id,
+                    videoUrl: video.video_url,
+                    topicName: topic.topic_name,
+                    section: section.section
+                }
+            })
+        )
+        res.status(200).json({
+            status: true,
+            message: 'Saved Videos fetched successfully',
+            data: videoDetailsWithTopicName,
+        });
+    } catch (error) {
+        console.error('Error fetching saved videos:', error);
+        res.status(500).json({ error: 'Error fetching saved videos' });
     }
 }
