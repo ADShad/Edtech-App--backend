@@ -50,6 +50,60 @@ exports.sendOtp = async (req, res) => {
     }
 };
 
+exports.sendOtpByUsername = async (req, res) => {
+    try {
+        // Input validation
+        const { userName } = req.body;
+        if (!userName) {
+            return res.status(400).json({
+                status: false,
+                error: "Missing required parameters",
+            });
+        }
+        //get phone_number
+        const user = await usersModel.findOne({
+            where: {
+                [Op.and]: [
+                    { username: userName },
+                    { is_deleted: 0 },
+                ],
+            },
+            attributes: ["phone_number"]
+        });
+        if (!user) {
+            return res.status(401).json({
+                status: false,
+                message: "User not found",
+            });
+        }
+        const mobile = user.phone_number;
+        const msgString = encodeURIComponent(
+            "<#> ##OTP## is your Hans Matrimony Login OTP. C/YgRNjOFYM"
+        );
+        var options = {
+            method: "GET",
+            url: `https://api.msg91.com/api/sendotp.php?authkey=${MSG_AUTH_KEY}&mobiles=${mobile}&message=${msgString}&sender=INHANS&otp=&DLT_TE_ID=1207162341543384380`,
+        };
+
+        // Use axios for asynchronous requests
+        const response = await axios(options);
+
+        const processedData = response.data;
+        return res.status(200).json({
+            status: true,
+            data: processedData.message,
+        });
+    } catch (error) {
+        console.error("Error in sendOtp:", error);
+        res.status(500).json({
+            status: false,
+            error: "Internal Server Error",
+        });
+    }
+};
+
+
+
 exports.register = async (req, res) => {
     try {
         const { name, mobile, email, userName, password, otp, isTest } = req.body;

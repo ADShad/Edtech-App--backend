@@ -66,5 +66,6 @@ module.exports = (app) => {
     router.get("/achievementsList", MappingController.achievementsList)
     router.post("/updateSavedVideos", myCourseController.updateSavedVideos)
     router.get("/getSavedVideos", myCourseController.getSavedVideos)
+    router.post("/sendOtpByUsername", loginController.sendOtpByUsername)
     app.use("/api/v1", router);
 };

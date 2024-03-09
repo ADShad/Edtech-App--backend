@@ -165,3 +165,32 @@ exports.getQuotes = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+exports.getRecommendedVideos = async (req, res) => {
+    try {
+        const videos = [
+            {
+                "title": "The Power of Habit",
+                "url": "https://youtu.be/DKkiCpbREOo",
+                "thumbnail": "https://descriptionimagesioasis.s3.ap-south-1.amazonaws.com/Rec2.PNG",
+                "description": "The Power of Habit: Why We Do What We Do in Life and Business is a book by Charles Duhigg, a New York Times reporter, published in February 2012 by Random House. It explores the science behind habit creation and reformation. The book has reached the best seller list for The New York Times, Amazon.com, and USA Today."
+            },
+            {
+                "title": "The 7 Habits of Highly Effective People",
+                "url": "https://youtu.be/9lhLRpJnihw",
+                "thumbnail": "https://descriptionimagesioasis.s3.ap-south-1.amazonaws.com/Rec3.PNG",
+                "description": "The 7 Habits of Highly Effective People, first published in 1989, is a business and self-help book written by Stephen R. Covey. Covey presents an approach to being effective in attaining goals by aligning oneself to what he calls 'true north' principles based on a character ethic that he presents as universal and timeless."
+            },
+            {
+                "title": "The Power of Now",
+                "url": "https://youtu.be/O7SiBzS2uMk",
+                "thumbnail": "https://descriptionimagesioasis.s3.ap-south-1.amazonaws.com/Rec1.PNG",
+                "description": "The Power of Now: A Guide to Spiritual Enlightenment is a book by Eckhart Tolle. The book is intended to be a guide for day-to-day living and stresses the importance of living in the present moment and transcending thoughts of the past or future."
+            },
+        ]
+        res.status(200).json({ videos });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
