@@ -40,7 +40,7 @@ exports.getUserProfile = async (req, res) => {
 
         const userProfile = await usersModel.findOne({
             where: { id: id, is_deleted: 0 },
-            attributes: ['id', 'username', 'phone_number', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid', 'created_at', 'streak_count'],
+            attributes: ['id', 'username', 'phone_number', 'email_address', 'full_name', 'bio', 'active_courseid', 'study_methodid', 'created_at', 'streak_count', 'user_photo'],
         });
         if (!userProfile) {
             return res.status(404).json({
@@ -381,6 +381,7 @@ exports.getUserDetailsByFlag = async (req, res) => {
                     date_of_birth: user.date_of_birth,
                     email: user.email_address,
                     phone_number: user.phone_number,
+                    user_photo: user.user_photo,
                 }
                 break;
             case 'family':
@@ -390,12 +391,14 @@ exports.getUserDetailsByFlag = async (req, res) => {
                     schoolName: user.tenth_school_name,
                     collegeName: user.college_name,
                     alternateNumber: user.alternate_phone_number,
+                    user_photo: user.user_photo,
                 }
                 break;
             case 'bio':
                 userDetails = {
                     userName: user.username,
                     bio: user.bio,
+                    user_photo: user.user_photo,
                 }
                 break;
             default:
@@ -420,6 +423,7 @@ exports.getUserDetailsByFlag = async (req, res) => {
                     createdAt: user.created_at,
                     active_courseid: user.active_courseid,
                     study_methodid: user.study_methodid,
+                    user_photo: user.user_photo,
                 }
                 break;
         }
