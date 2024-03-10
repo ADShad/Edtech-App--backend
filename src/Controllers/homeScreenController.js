@@ -187,6 +187,12 @@ exports.getRecommendedVideos = async (req, res) => {
                 "thumbnail": "https://descriptionimagesioasis.s3.ap-south-1.amazonaws.com/Rec1.PNG",
                 "description": "The Power of Now: A Guide to Spiritual Enlightenment is a book by Eckhart Tolle. The book is intended to be a guide for day-to-day living and stresses the importance of living in the present moment and transcending thoughts of the past or future."
             },
+            {
+                "title": "The Power of Now",
+                "url": "https://youtu.be/O7SiBzS2uMk",
+                "thumbnail": "https://descriptionimagesioasis.s3.ap-south-1.amazonaws.com/Rec4.PNG",
+                "description": "The Power of Now: A Guide to Spiritual Enlightenment is a book by Eckhart Tolle. The book is intended to be a guide for day-to-day living and stresses the importance of living in the present moment and transcending thoughts of the past or future."
+            },
         ]
         res.status(200).json({ videos });
     }
