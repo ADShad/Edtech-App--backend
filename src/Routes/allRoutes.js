@@ -68,5 +68,7 @@ module.exports = (app) => {
     router.get("/getSavedVideos", myCourseController.getSavedVideos)
     router.post("/sendOtpByUsername", loginController.sendOtpByUsername)
     router.get("/getRecommendedVideos", homeScreenController.getRecommendedVideos)
+    router.get("/getMeetingSchedule", homeScreenController.getMeetingSchedule)
+    router.post("/updateMeetingSchedule", homeScreenController.updateMeetingSchedule)
     app.use("/api/v1", router);
 };

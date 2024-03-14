@@ -1,3 +1,6 @@
+const db = require('../../Config/connection');
+const { Op } = require('sequelize');
+const MeetingScheduleModel = db.MeetingSchedule;
 exports.getBannerUrls = async (req, res) => {
     try {
         const urls = [
@@ -197,6 +200,48 @@ exports.getRecommendedVideos = async (req, res) => {
         res.status(200).json({ videos });
     }
     catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+exports.updateMeetingSchedule = async (req, res) => {
+    try {
+        const { date, time_slot, call_type, mobile_number, user_id } = req.body;
+        const exisingMeeting = await MeetingScheduleModel.findOne({
+            where: {
+                date,
+                time_slot,
+                call_type,
+                mobile_number,
+                user_id
+            }
+        });
+        if (exisingMeeting) {
+            res.status(400).json({ message: "Meeting already scheduled" });
+            return;
+        }
+        const meeting = await MeetingScheduleModel.create({
+            date,
+            time_slot,
+            call_type,
+            mobile_number,
+            user_id
+        });
+        res.status(200).json({ meeting });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+exports.getMeetingSchedule = async (req, res) => {
+    try {
+        const { user_id } = req.query;
+        const meetings = await MeetingScheduleModel.findAll({
+            where: {
+                user_id
+            }
+        });
+        res.status(200).json({ meetings });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 }

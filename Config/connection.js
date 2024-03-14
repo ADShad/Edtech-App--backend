@@ -19,6 +19,10 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+db.MeetingSchedule = require('../src/Models/MeetingScheduleModel')(
+    sequelize,
+    Sequelize
+);
 db.usersModel = require('../src/Models/usersModel')(
     sequelize,
     Sequelize
