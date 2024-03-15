@@ -140,15 +140,16 @@ exports.register = async (req, res) => {
             });
         }
 
-        // Your existing request options
-        var options = {
-            method: "GET",
-            url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
-        };
+        let success = true;
 
-        let success = false;
+        // Skip OTP verification if the OTP is "1111" and it's a test
+        if (otp !== "1111" || isTest !== 1) {
+            // Your existing request options
+            var options = {
+                method: "GET",
+                url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
+            };
 
-        if (isTest !== 1) {
             const response = await new Promise((resolve, reject) => {
                 request(options, function (error, response) {
                     if (error) {
@@ -198,10 +199,11 @@ exports.register = async (req, res) => {
         });
     }
 };
+
 exports.login = async (req, res) => {
     try {
-        const { userName, password, otp } = req.body;
-        // console.log(req.body);
+        const { userName, password, otp, isTest } = req.body;
+
         // Simple validation checks
         if (!userName || !password) {
             return res.status(400).json({
@@ -227,13 +229,15 @@ exports.login = async (req, res) => {
                 message: "Invalid username or password",
             });
         }
-        let mobile = user.phone_number;
-        var options = {
-            method: "GET",
-            url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
-        };
-        let isTest = 0;
-        if (isTest !== 1) {
+
+        // Skip OTP verification if the OTP is "1111" and it's a test
+        if (otp !== "1111" || isTest !== 1) {
+            let mobile = user.phone_number;
+            var options = {
+                method: "GET",
+                url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
+            };
+
             const response = await new Promise((resolve, reject) => {
                 request(options, function (error, response) {
                     if (error) {
@@ -243,6 +247,7 @@ exports.login = async (req, res) => {
                     }
                 });
             });
+
             const processedData = JSON.parse(response.body);
 
             if (processedData.type === "error") {
@@ -250,10 +255,9 @@ exports.login = async (req, res) => {
                     status: false,
                     message: "Invalid OTP",
                 });
-            } else {
-                success = true;
             }
         }
+
         // Compare the provided password with the hashed password in the database
         const passwordMatch = await bcrypt.compare(password, user.user_password);
 
@@ -266,7 +270,7 @@ exports.login = async (req, res) => {
 
         // Generate and return a JWT token for authentication
         const token = await jwt.generatetoken(user.id);
-        // console.log(token);
+
         return res.status(200).json({
             status: true,
             message: "Login successful",
@@ -281,6 +285,7 @@ exports.login = async (req, res) => {
         });
     }
 };
+
 
 exports.testapi = async (req, res) => {
     try {
@@ -302,7 +307,7 @@ exports.resetPassword = async (req, res) => {
         if (!mobile || !newPassword || !otp) {
             return res.status(400).json({
                 status: false,
-                message: "MobileNo, newPassword, and OTP are required",
+                message: "Mobile number, newPassword, and OTP are required",
             });
         }
 
@@ -323,11 +328,33 @@ exports.resetPassword = async (req, res) => {
             });
         }
 
-
         // Hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         // Update the user's password in the database
+        if (otp !== "1111" || isTest !== 1) {
+            var options = {
+                method: "GET",
+                url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
+            };
+            request(options, function (error, response) {
+                if (error) {
+                    return res.status(500).json({
+                        status: false,
+                        error: "Error verifying OTP",
+                    });
+                } else {
+                    let processedData = JSON.parse(response.body);
+                    if (processedData.type == "error") {
+                        return res.status(400).json({
+                            status: false,
+                            message: "Invalid OTP",
+                        });
+                    }
+                }
+            });
+        }
+
         await usersModel.update(
             { password: hashedPassword },
             {
@@ -336,44 +363,18 @@ exports.resetPassword = async (req, res) => {
                 },
             }
         );
+
         if (isTest == 1) {
-            console.log("here");
             return res.status(200).json({
                 status: true,
                 message: "Password reset successful",
-                // data: processedData.message,
             });
         } else {
-            var options = {
-                method: "GET",
-                url: `https://control.msg91.com/api/verifyRequestOTP.php?authkey=${MSG_AUTH_KEY}&mobile=${mobile}&otp=${otp}`,
-            };
-            request(options, function (error, response) {
-                if (error) {
-                    return res.status(200).json({
-                        status: false,
-                        data: error,
-                    });
-                } else {
-                    let processedData = JSON.parse(response.body);
-                    // console.log(response.body);
-
-                    if (processedData.type == "error") {
-                        return res.status(400).json({
-                            status: false,
-                            message: "Invalid OTP",
-                        });
-                    } else {
-                        return res.status(200).json({
-                            status: true,
-                            message: "Password reset successful",
-                            // data: processedData.message,
-                        });
-                    }
-                }
+            return res.status(200).json({
+                status: true,
+                message: "Password reset successful",
             });
         }
-
     } catch (error) {
         console.error("Error in reset password:", error);
         return res.status(500).json({
@@ -382,6 +383,7 @@ exports.resetPassword = async (req, res) => {
         });
     }
 };
+
 
 exports.updatePersonalDetails = async (req, res) => {
     try {
